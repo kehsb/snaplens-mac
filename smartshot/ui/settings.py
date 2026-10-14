@@ -13,19 +13,10 @@ from smartshot.slip.thunder import store_key, thunder_key
 from smartshot.system import mac
 from smartshot.system.autostart import autostart
 from smartshot.system.hotkey import MODS, chord, key_rule, keyname
+from smartshot.ui.native import box, dynamic, fixed, label, stack, target, tile
 
 FLAGS = {"cmd": 1 << 20, "shift": 1 << 17, "alt": 1 << 19, "ctrl": 1 << 18}  # NSEventModifierFlag*, by MODS' names
 SIDEBAR, CONTENT, HEIGHT = 230, 500, 460
-
-
-class _Target(NSObject):  # a control's target: AppKit holds it weakly, the window keeps it
-    def initWithFn_(self, fn):
-        self = objc.super(_Target, self).init()
-        self.fn = fn
-        return self
-
-    def fire_(self, sender):
-        self.fn(sender)
 
 
 class _Delegate(NSObject):  # the window's: its close button hides it (and Main says once where the app went)
@@ -51,77 +42,8 @@ class _Delegate(NSObject):  # the window's: its close button hides it (and Main 
         return None
 
 
-def dynamic(dark, light):  # a colour that follows the appearance: (r, g, b, a) 0-1 each
-    rgba = lambda c: AppKit.NSColor.colorWithSRGBRed_green_blue_alpha_(*c)
-
-    def pick(appearance):
-        names = [AppKit.NSAppearanceNameAqua, AppKit.NSAppearanceNameDarkAqua]
-        return rgba(dark if appearance.bestMatchFromAppearancesWithNames_(names) == names[1] else light)
-    return AppKit.NSColor.colorWithName_dynamicProvider_(None, pick)
-
-
 GROUP = dynamic((1, 1, 1, .05), (1, 1, 1, .9))  # System Settings' grouped rows
 CAP = dynamic((1, 1, 1, .1), (1, 1, 1, 1))  # a keycap
-
-
-def label(text, size=13, weight=AppKit.NSFontWeightRegular, color=None):
-    f = AppKit.NSTextField.labelWithString_(text)
-    f.setFont_(AppKit.NSFont.systemFontOfSize_weight_(size, weight))
-    f.setTextColor_(color or AppKit.NSColor.labelColor())
-    f.setLineBreakMode_(AppKit.NSLineBreakByTruncatingTail)
-    return f
-
-
-def fixed(view, w, h):
-    view.setTranslatesAutoresizingMaskIntoConstraints_(False)
-    view.widthAnchor().constraintEqualToConstant_(w).setActive_(True)
-    view.heightAnchor().constraintEqualToConstant_(h).setActive_(True)
-    return view
-
-
-def stack(views, vertical=False, spacing=8, insets=None, align=None):
-    s = AppKit.NSStackView.stackViewWithViews_(views)
-    s.setOrientation_(AppKit.NSUserInterfaceLayoutOrientationVertical if vertical else
-                      AppKit.NSUserInterfaceLayoutOrientationHorizontal)
-    s.setSpacing_(spacing)
-    s.setAlignment_(align if align is not None else
-                    AppKit.NSLayoutAttributeLeading if vertical else AppKit.NSLayoutAttributeCenterY)
-    if insets:
-        s.setEdgeInsets_(AppKit.NSEdgeInsets(*insets))
-    return s
-
-
-def tile(symbol, rgb):  # System Settings' icon: a white SF Symbol on a coloured rounded square
-    v = fixed(AppKit.NSView.alloc().init(), 24, 24)
-    v.setWantsLayer_(True)
-    v.layer().setCornerRadius_(6)
-    v.layer().setBackgroundColor_(AppKit.NSColor.colorWithSRGBRed_green_blue_alpha_(*(c / 255 for c in rgb), 1).CGColor())
-    img = AppKit.NSImageView.imageViewWithImage_(AppKit.NSImage.imageWithSystemSymbolName_accessibilityDescription_(symbol, None))
-    img.setSymbolConfiguration_(AppKit.NSImageSymbolConfiguration.configurationWithPointSize_weight_(13, AppKit.NSFontWeightSemibold))
-    img.setContentTintColor_(AppKit.NSColor.whiteColor())
-    img.setTranslatesAutoresizingMaskIntoConstraints_(False)
-    v.addSubview_(img)
-    img.centerXAnchor().constraintEqualToAnchor_(v.centerXAnchor()).setActive_(True)
-    img.centerYAnchor().constraintEqualToAnchor_(v.centerYAnchor()).setActive_(True)
-    return v
-
-
-def box(view, radius, fill, border=False):  # view on a rounded, filled box
-    b = AppKit.NSBox.alloc().init()
-    b.setBoxType_(AppKit.NSBoxCustom)
-    b.setTitlePosition_(AppKit.NSNoTitle)
-    b.setCornerRadius_(radius)
-    b.setFillColor_(fill)
-    b.setBorderWidth_(.5 if border else 0)
-    b.setBorderColor_(AppKit.NSColor.separatorColor())
-    b.setContentViewMargins_(NSMakeSize(0, 0))
-    b.setTranslatesAutoresizingMaskIntoConstraints_(False)
-    view.setTranslatesAutoresizingMaskIntoConstraints_(False)
-    b.contentView().addSubview_(view)
-    for a, z in (("leadingAnchor", "leadingAnchor"), ("trailingAnchor", "trailingAnchor"),
-                 ("topAnchor", "topAnchor"), ("bottomAnchor", "bottomAnchor")):
-        getattr(view, a)().constraintEqualToAnchor_(getattr(b.contentView(), z)()).setActive_(True)
-    return b
 
 
 class Row:  # a grouped row: its tile, a title and a line under it (hidden when empty), its controls at the end
@@ -158,9 +80,7 @@ def group(rows):  # rows in one rounded box, hairlines between them (from the wo
 
 
 def button(title, fn, keep):
-    t = _Target.alloc().initWithFn_(fn)
-    keep.append(t)
-    b = AppKit.NSButton.buttonWithTitle_target_action_(title, t, "fire:")
+    b = AppKit.NSButton.buttonWithTitle_target_action_(title, target(fn, keep), "fire:")
     b.setBezelStyle_(AppKit.NSBezelStyleRounded)
     return b
 
@@ -231,18 +151,14 @@ class SettingsWindow:
         self.key_row = Row("keyboard", (47, 155, 224), "คีย์ลัดแคปหน้าจอ", self.key_label, self.key_btn)
         self.mode = AppKit.NSPopUpButton.alloc().initWithFrame_pullsDown_(NSMakeRect(0, 0, 140, 24), False)
         self.mode.addItemsWithTitles_(self.main.MODE_NAMES)
-        t = _Target.alloc().initWithFn_(lambda b: self.main.pick_mode(b.indexOfSelectedItem()))
-        self.keep.append(t)
-        self.mode.setTarget_(t)
+        self.mode.setTarget_(target(lambda b: self.main.pick_mode(b.indexOfSelectedItem()), self.keep))
         self.mode.setAction_("fire:")
         lang = Row("globe", (18, 169, 138), "ภาษาที่อ่าน", self.mode)
         lang.say("ภาษาของข้อความที่จะให้อ่านตอนแคป")
         self.api_btn = button("ใส่คีย์…", lambda _: self.ask_key(), self.keep)
         self.api_row = Row("key.fill", (229, 145, 20), "Thunder API key", self.api_btn)
         self.boot = AppKit.NSSwitch.alloc().init()
-        t = _Target.alloc().initWithFn_(lambda s: autostart(bool(s.state())))
-        self.keep.append(t)
-        self.boot.setTarget_(t)
+        self.boot.setTarget_(target(lambda s: autostart(bool(s.state())), self.keep))
         self.boot.setAction_("fire:")
         boot = Row("power", (122, 130, 148), "เปิดเมื่อเข้าสู่ระบบ", self.boot)
         boot.say(f"เริ่มเองแล้วรออยู่ที่{TRAY}")
