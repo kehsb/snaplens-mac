@@ -39,6 +39,8 @@ def cover(w):
     n.setCollectionBehavior_(AppKit.NSWindowCollectionBehaviorCanJoinAllSpaces
                              | AppKit.NSWindowCollectionBehaviorFullScreenAuxiliary)
     n.setHasShadow_(False)
+    n.setStyleMask_(n.styleMask() & ~AppKit.NSWindowStyleMaskResizable)  # its edges and corners are the selection's
+    n.setMovable_(False)
 
 
 @contextmanager

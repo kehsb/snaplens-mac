@@ -205,6 +205,7 @@ class Overlay(QWidget):
         self.img = qimage(shot_bgr).convertToFormat(QImage.Format_RGB32)
         self.pix = QPixmap.fromImage(self.img)
         self.setGeometry(geometry)
+        self.setFixedSize(geometry.size())  # not a window macOS lets an edge drag resize: a drag to the screen's corner selects
         self.k = w / geometry.width()  # screenshot px per widget px (the screen's DPI scale)
         # what the canvas's own glass (the size tag, the magnifier's label) shows through it: the capture frosted;
         # none when Reduce transparency is on
