@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+dev.err
+dev.log
+thunder.key
+testset/slips/
+build/
+dist/
+installer/
+*.pem
