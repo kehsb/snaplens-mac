@@ -2,6 +2,7 @@
 targets for Python callbacks, labels, stacks, SF Symbols, Liquid Glass, menus, and the root view a capture's native
 surface hangs from inside the overlay's own NSView."""
 import ctypes
+import traceback
 
 import AppKit
 import objc
@@ -11,6 +12,17 @@ try:
     GLASS = objc.lookUpClass("NSGlassEffectView")  # macOS 26: Liquid Glass; else a vibrant blur stands in
 except objc.nosuchclass_error:
     GLASS = None
+HEADS = AppKit.NSMenuItem.respondsToSelector_("sectionHeaderWithTitle:")  # macOS 14: a menu's section titles
+
+
+def reported(fn, *args, fallback=None):
+    """fn(*args) for AppKit (an action, a delegate, an event monitor): an exception in it is printed, as from a Qt
+    slot, and fallback returned. Let through, AppKit drops it without a word."""
+    try:
+        return fn(*args)
+    except Exception:
+        traceback.print_exc()
+        return fallback
 
 
 class Target(NSObject):  # a control's or menu item's target: AppKit holds it weakly, its owner keeps it (keep)
@@ -20,7 +32,7 @@ class Target(NSObject):  # a control's or menu item's target: AppKit holds it we
         return self
 
     def fire_(self, sender):
-        self.fn(sender)
+        reported(self.fn, sender)
 
 
 def target(fn, keep):  # -> a Target calling fn(sender), kept alive in the list keep
@@ -194,8 +206,11 @@ def menu(rows, keep, title=""):
         if row is None:
             m.addItem_(AppKit.NSMenuItem.separatorItem())
             continue
-        if row[0] == "head":
-            m.addItem_(AppKit.NSMenuItem.sectionHeaderWithTitle_(row[1]))
+        if row[0] == "head":  # before macOS 14: a greyed row
+            if HEADS:
+                m.addItem_(AppKit.NSMenuItem.sectionHeaderWithTitle_(row[1]))
+            else:
+                m.addItemWithTitle_action_keyEquivalent_(row[1], None, "").setEnabled_(False)
             continue
         glyph, text, keys, checked, fn = row
         it = AppKit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(text, None, keys[0] if keys else "")

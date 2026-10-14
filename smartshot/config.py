@@ -22,11 +22,9 @@ LANGS = {"th": ("ไทย", "th-TH"), "en": ("อังกฤษ", "en-GB"), "z
          "ja": ("ญี่ปุ่น", "ja-JP"), "ko": ("เกาหลี", "ko-KR"), "vi": ("เวียดนาม", "vi-VN")}
 PAD = 100
 UPSCALE, SMALL = 2, 400  # captures under SMALL px on a side are enlarged before OCR
-# text drawn on the image (translations, the text tool)
+# text drawn on the image (translations, the text tool); the app's own text is the system's (SF, Menlo)
 FONTS = ["Thonburi", "Helvetica Neue", "PingFang SC"]
 ASSETS = os.path.join(HERE, "assets")
-UI_FONTS = ["Anuphan", "Thonburi", "Helvetica Neue", "PingFang SC"]  # the app's own text: bundled, else the next one
-MONO = ["Geist Mono", "Menlo"]  # account numbers, references, image sizes, keys
 MIN_SCORE = 0.5  # below this the reading is usually hallucinated
 THAI = re.compile(r"[฀-๿]")
 PINYIN = re.compile(r"[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]")

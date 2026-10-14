@@ -1,48 +1,32 @@
-"""The capture: select, OCR, translate, mark up; QR cards and slip verdicts."""
+"""The capture: select, OCR, translate, mark up; QR cards and slip verdicts. The canvas is Qt-painted; its chrome
+(toolbar, hints, toast, menus, ink popover: chrome.py; the QR card: slipcard.py) is native AppKit inside its NSView."""
 import os
 from datetime import datetime
 
-from PySide6.QtCore import QEvent, QLineF, QPoint, QPointF, QRect, QRectF, QSizeF, QStandardPaths, Qt, Signal
+from AppKit import NSAppearanceNameAqua, NSAppearanceNameDarkAqua
+from PySide6.QtCore import QLineF, QPoint, QPointF, QRect, QRectF, QSizeF, QStandardPaths, Qt, QTimer, Signal
 from PySide6.QtGui import (QBrush, QColor, QCursor, QFont, QFontMetrics, QGuiApplication, QImage, QKeySequence,
                            QPainter, QPainterPath, QPen, QPixmap, QPolygonF, QRegion, QTransform)
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QFileDialog, QGridLayout, QHBoxLayout, QLineEdit,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import QFileDialog, QLineEdit, QWidget
 from qfluentwidgets import isDarkTheme
 
-from smartshot.config import CTRL, LANGS, THAI, VERSION
+from smartshot.config import CTRL, LANGS, VERSION
 from smartshot.ocr.engine import ocr
 from smartshot.ocr.translate import translate
 from smartshot.qr.promptpay import TH_MONTHS, qr_info
 from smartshot.qr.scan import panels, scan_qr
-from smartshot.slip.compare import compare
-from smartshot.slip.thunder import NO_KEY, THUNDER_ERRORS, slip_fields, store_key, verify_slip
+from smartshot.slip.thunder import slip_fields, store_key, verify_slip
 from smartshot.system import mac
 from smartshot.task import Task
 from smartshot.ui.assets import font, glyph_svg, ui_font
-from smartshot.ui.card import KEYLESS, MARKS, MARKS_LIGHT, MONEY, TONES, TONES_LIGHT, lab, tone_ink
-from smartshot.ui.glass import (DIM, chrome, clear, field_qss, frame_shadow, frost, glass, ink, paint_glass,
-                                qimage, rgba, rim, shadow, themed)
-from smartshot.ui.widgets import (Box, Disc, GlassButton, GlassMenu, GlassPanel, GlassPopup, GlassTip, HintBar,
-                                  InkPopover, Toast)
+from smartshot.ui.chrome import Chrome
+from smartshot.ui.glass import DIM, chrome, clear, frame_shadow, frost, ink, paint_glass, qimage, rgba, rim, shadow
+from smartshot.ui.native import host
+from smartshot.ui.slipcard import KEYLESS, TONES, SlipCard, model, tone_rgb
 
 
-
-def verdict(payload, res, table=()):  # a slip's state, compare()'s rows -> tone, glyph (None: still asking), head, sub
-    if res is None:
-        return "info", None, "กำลังตรวจกับธนาคาร…", ""
-    if res[1]:  # messages read "what: what to do"; red only for a slip the bank doesn't have, not "couldn't check"
-        bad, (head, _, sub) = res[1] == THUNDER_ERRORS["SLIP_NOT_FOUND"], res[1].partition(": ")
-        return "bad" if bad else "none", "x" if bad else "question", head, sub
-    if res[0].get("isDuplicate"):  # amber either way: a slip shown again may be a payment claimed twice
-        if first := Overlay.seen.get(payload):  # the app lives in the tray for days: the day too, unless it's today
-            day = "" if first.date() == datetime.now().date() else f"{first.day} {TH_MONTHS[first.month - 1]} "
-            return "warn", "history", f"ตรวจสลิปนี้ไปแล้วเมื่อ {day}{first:%H:%M} น.", "ธนาคารยืนยันรายการ ถ้ารับเงินไปแล้ว อย่ารับซ้ำ"
-        return "warn", "history", "สลิปนี้เคยถูกตรวจแล้ว", "ถ้าไม่ได้ตรวจเอง อาจเป็นสลิปที่ใช้ซ้ำ"
-    if bad := [r[0] for r in table if r[4] == "✗"]:  # an edited image (or a misread): the table shows both sides
-        return "warn", "search", "ข้อมูลในภาพไม่ตรงกับธนาคาร", f"ไม่ตรง: {', '.join(bad)}"
-    n, unsure = sum(r[4] == "✓" for r in table), sum(r[4] == "?" for r in table)
-    return "ok", "check", "ธนาคารยืนยันรายการ", \
-        f"ตรง {n} · เทียบไม่ได้ {unsure}" if unsure else "ข้อมูลในภาพตรงกับธนาคาร" if table else "เทียบข้อมูลกับสลิป"
+def tone_ink(tone):  # a verdict's colour, solid: its code's box and badge on the image, the tag's dot
+    return QColor(*tone_rgb(tone))
 
 
 class Layer:
@@ -222,11 +206,12 @@ class Overlay(QWidget):
         self.pix = QPixmap.fromImage(self.img)
         self.setGeometry(geometry)
         self.k = w / geometry.width()  # screenshot px per widget px (the screen's DPI scale)
-        # what glass shows through it: the capture frosted; none when Reduce transparency is on
+        # what the canvas's own glass (the size tag, the magnifier's label) shows through it: the capture frosted;
+        # none when Reduce transparency is on
         self.clear = clear()
         self.frost = frost(shot_bgr, geometry.size(), 22)
         # a/b: selection corners. Compare with None: QPoint(0, 0) is falsy
-        self.a = self.b = self.layer = self.edit = self.queued = self.band = self.grip = self.card = None
+        self.a = self.b = self.layer = self.edit = self.queued = self.band = self.grip = None
         self.drag = None  # "region" | "resize" | "band" | "shape" while the left button is down
         self.slips = {}  # QR payload -> Thunder's (data, error, when); None while asking. Per selection
         # what a click can pick (widget px, smallest first), slips around their codes; the one previewed, the
@@ -242,74 +227,23 @@ class Overlay(QWidget):
         self.cur = cur if self.rect().contains(cur) else None
         self.setCursor(Qt.CrossCursor)
         self.setMouseTracking(True)
-        self.setFocusPolicy(Qt.ClickFocus)  # a click on the image takes keys (Ctrl+C) back from the QR card's text
-        self.bar = self._toolbar()
-        self.inks, self.tipbox = InkPopover(self), GlassTip(self)
-        self.hints = HintBar(self, self.MODES.get(mode, mode))  # shown while nothing is selected
-        self.toast = Toast(self)
-        self.hints.move((self.width() - self.hints.width()) // 2, 20)
+        self.setFocusPolicy(Qt.ClickFocus)  # a click on the image takes keys (⌘C) back from the QR card's text
+        # native, in this window's own view (its winId(), made now, before it's shown): the toolbar, the hint bar
+        # (shown while nothing is selected), the toast, the menus; over them the card
+        self.view = host(self)
+        self.chrome = Chrome(self)
+        self.card = SlipCard(self.view, self.chrome_pressed, self.retry, self.copy_card, self.save_receipt, self.use_key,
+                             self.escape)
+        # show_qrs put off while a press on the card is held: a rebuild then would take the button, and its click, away
+        self.again = QTimer(self, singleShot=True, interval=50, timeout=self.show_qrs)
 
-    def _toolbar(self):  # glass capsules 8 apart: tools | ink, undo | translate (tinted) | view, copy, save | close
-        bar = QWidget(self)
-        bar.setCursor(Qt.ArrowCursor)
-        row = QHBoxLayout(bar)
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(8)
-
-        def group(kind, *buttons):
-            g = GlassPanel(bar, kind)
-            lay = QHBoxLayout(g)
-            lay.setContentsMargins(6, 6, 6, 6)
-            lay.setSpacing(2 if kind == "bar" else 0)
-            for b in buttons:
-                lay.addWidget(b) if isinstance(b, QWidget) else lay.addSpacing(b)
-            row.addWidget(g)
-
-        self.tools = QButtonGroup(bar)  # exclusive: one tool
-        for i, (name, tip) in enumerate(self.TOOLS):
-            b = GlassButton(name, tip=tip if name == "select" else f"{tip} · คลิกขวา: สีและขนาด")
-            b.setCheckable(True)
-            self.tools.addButton(b, i)
-        self.tools.button(0).setChecked(True)
-        self.tools.idClicked.connect(lambda i: self.set_tool(self.TOOLS[i][0]))
-        sep = QWidget()  # CSS: 1 x 22, margin 0 4
-        sep.setFixedSize(1, 22)
-        sep.setAttribute(Qt.WA_StyledBackground)
-        sep.setStyleSheet(f"background:{ink(.16).name(QColor.HexArgb)}")
-        group("bar", self.tools.button(0), 4, sep, 4, *self.tools.buttons()[1:])
-        self.ink_btn = GlassButton(tip="สีและขนาดเส้น")
-        self.ink_btn.swatch = self.color
-        self.ink_btn.setCheckable(True)  # lit while its popover is open (InkPopover)
-        self.ink_btn.clicked.connect(self.ink_menu)
-        undo = GlassButton("undo", tip="เลิกทำ", keys=f"{CTRL}+Z")
-        undo.clicked.connect(self.undo)
-        group("bar", self.ink_btn, undo)
-        self.tr_btn = GlassButton("translate", f"แปล · {LANGS[self.lang][0]}", tip="แปลบรรทัดที่เลือก หรือทั้งหมด แล้ววางทับในภาพ")
-        self.tr_btn.clicked.connect(lambda: self.after_ocr(self.translate_lines))
-        langs = GlassButton("chevron", tip="เลือกภาษา")
-        langs.icon_px = 16
-        langs.setFixedWidth(32)
-        langs.clicked.connect(self.lang_menu)
-        group("tint", self.tr_btn, langs)
-        self.orig_btn = GlassButton("eye", tip="สลับดูต้นฉบับ / คำแปล")
-        self.orig_btn.setCheckable(True)
-        self.orig_btn.toggled.connect(self.show_original)
-        buttons = [self.orig_btn]
-        for glyph, tip, keys, slot in (("copy", "คัดลอกข้อความ: ที่เลือก หรือทั้งหมด", "", lambda: self.after_ocr(self.copy_text)),
-                                       ("image", "คัดลอกรูปแล้วปิด", f"{CTRL}+C", self.copy_image),
-                                       ("save", "บันทึกรูป", f"{CTRL}+S", self.save),
-                                       ("close", "ปิด", "Esc", lambda: self.closed.emit())):
-            b = GlassButton(glyph, tip=tip, keys=keys)
-            b.clicked.connect(slot)
-            buttons.append(b)
-        group("bar", *buttons[:-1])
-        group("bar", buttons[-1])  # a circle of its own
-        bar.hide()
-        return bar
-
-    def drop(self, g, w):  # where w opens under the toolbar capsule g: 10 below, else 10 above it
-        r = QRect(g.mapTo(self, QPoint()), g.size())
-        return QPoint(r.left(), r.bottom() + 11 if r.bottom() + 11 + w.height() <= self.height() else r.top() - 10 - w.height())
+    def chrome_pressed(self):
+        """A press on native chrome (before its control acts), as one on Qt's did: a text-tool edit is put on the
+        image, and the keys come back to the image unless the press is in the card's key box or on its label being
+        selected."""
+        self.end_edit()
+        if not self.card.keeps_keys() and self.view.window() is not None:
+            self.view.window().makeFirstResponder_(self.view)
 
     def sel_rect(self):  # clamped: a drag can run past the screen edge
         # span, not normalized(): that drops a px per flipped axis, so grabbing a top/left grip would shrink it
@@ -344,9 +278,7 @@ class Overlay(QWidget):
         self.status = text
         self.update()
 
-    def backdrop(self, p, r, panel=None):
-        """Behind panel's glass at r: the capture frosted, dimmed like the screen around it; under a menu or tooltip
-        also the glass it opens over (its fill, unblurred: the frost is of the capture only)."""
+    def backdrop(self, p, r):  # behind the canvas's glass at r: the capture frosted, dimmed like the screen around it
         q = self.frost.width() / self.width()
         p.drawPixmap(QRectF(r), self.frost, QRectF(r.x() * q, r.y() * q, r.width() * q, r.height() * q))
         lit = self.sel_rect() if self.a is not None else self.hover
@@ -355,27 +287,14 @@ class Overlay(QWidget):
             p.setClipRegion(QRegion(r).subtracted(QRegion(lit)), Qt.IntersectClip)
         p.fillRect(r, DIM)
         p.restore()
-        if isinstance(panel, (GlassPopup, GlassTip)):
-            for w in self.findChildren(GlassPanel):
-                if w.isVisible() and not isinstance(w, (GlassPopup, GlassTip)):
-                    shape = QPainterPath()
-                    shape.addRoundedRect(QRectF(QRect(w.mapTo(self, QPoint()), w.size())), w.corner(), w.corner())
-                    p.fillPath(shape, glass(w.kind)[0])
-
-    def shadows(self, p):  # under the glass on this screen: a panel can't paint outside itself
-        for w in self.findChildren(GlassPanel):
-            if w.isVisible():
-                dy, blur, color = glass(w.kind)[3]
-                g = QRect(w.mapTo(self, QPoint()), w.size())
-                p.drawImage(g.topLeft() + QPoint(-blur, dy - blur), shadow(g.width(), g.height(), round(w.corner()), blur, color))
 
     def reset(self):  # drop the selection and everything done on it
         self.end_edit(False)
         self.gen += 1  # OCR/translation still running for it is ignored when it lands
         self.a = self.b = self.layer = self.queued = self.band = self.drag = self.grip = None
         self.status, self.asked, self.slips = "", set(), {}
-        self.bar.hide()
-        self.hints.show()
+        self.chrome.show_bar(False)
+        self.chrome.hints(True)
         self.show_qrs()  # no layer: removes the card
         self.setCursor(Qt.CrossCursor)
         self.update()
@@ -390,39 +309,18 @@ class Overlay(QWidget):
     def fail(self, msg):
         self.ready, self.asked = True, set()
         self.set_status(f"ผิดพลาด: {msg[:80]}")
-        if self.card:  # a slip held back for the amount check gets its verdict
+        if self.layer and self.layer.qrs:  # a slip held back for the amount check gets its verdict
             self.show_qrs()
 
-    def place_bar(self):  # under the selection from its left, else above it, else inside its bottom edge
-        r, bar = self.sel_rect(), self.bar
-        QApplication.sendPostedEvents(None, QEvent.LayoutRequest)  # a label just changed: its capsule's new width
-        bar.adjustSize()
-        y = r.bottom() + 21  # 18 under the selection's frame, which is 2 outside it
-        if y + bar.height() > self.height():
-            y = r.top() - bar.height() - 20
-        if y < 0:
-            y = r.bottom() - bar.height() - 8
-        bar.move(min(max(r.left() - 2, 0), self.width() - bar.width()), y)
-        bar.show()
-        if self.card:
-            self.place_card()
+    def place_bar(self):  # the toolbar under the selection (chrome.place: place_bar's rule), then the card
+        self.chrome.place()
+        self.place_card()
 
-    def place_card(self):  # beside the selection: right, else left, else inside its top-right corner; off the toolbar
-        r, c, bar = self.sel_rect(), self.card, self.bar.geometry()
-        c.show()  # first: the labels' styled fonts set their wrapped height
-        h = c.heightForWidth(c.width())  # not adjustSize(), which wraps labels at a guessed width
-        c.resize(c.width(), h if h > 0 else c.sizeHint().height())
-        x = r.right() + 10 if r.right() + 10 + c.width() <= self.width() else r.left() - 10 - c.width()
-        if x < 0:
-            x = r.right() - c.width() - 10
-        x, y = max(x, 0), max(r.top(), 0)
-        if QRect(x, y, c.width(), c.height()).intersects(bar):  # taller than the selection: up off the toolbar
-            y = bar.top() - 8 - c.height() if bar.top() - 8 - c.height() >= 0 else bar.bottom() + 8
-        c.move(x, min(y, max(self.height() - c.height(), 0)))
-        c.raise_()
-        for w in self.findChildren(GlassPopup):  # a menu open when the card was rebuilt stays over it
-            if w.isVisible():
-                w.raise_()
+    def place_card(self):  # beside the selection, off the toolbar (SlipCard.place); not while the border is dragged:
+        if self.drag == "resize" or self.a is None:  # a slip's answer landing then waits for the release
+            return
+        bar = self.chrome.bar_frame()
+        self.card.place(self.sel_rect().getRect(), bar.getRect() if bar is not None else None)
 
     def set_picks(self, found):  # panels() is back: boxes in widget px; the cursor may already be on a slip
         self.picks, self.qr_picks = ([QRect(*(round(v / self.k) for v in b)) for b in boxes] for boxes in found)
@@ -436,9 +334,8 @@ class Overlay(QWidget):
     def open_layer(self):  # selection made: tools appear and text is read right away, in the background
         self.hover = self.base_pick = None
         self.layer = Layer(self.img, self._src(self.sel_rect()), self.k)
-        self.tr_btn.setText(f"แปล · {LANGS[self.lang][0]}")  # may have been changed on another screen
-        self.orig_btn.setChecked(False)
-        self.orig_btn.setEnabled(False)
+        self.chrome.set_translate_title(f"แปล · {LANGS[self.lang][0]}")  # may have been changed on another screen
+        self.chrome.set_original(False, False)
         self.place_bar()
         self.read()
 
@@ -457,190 +354,32 @@ class Overlay(QWidget):
         self.update()
 
     def show_qrs(self):
-        """The QR card beside the selection, read like a bank receipt: verdict, amount, who, when. Slips are checked with
-        Thunder once per selection: the answer is kept, so resizing doesn't ask (or spend quota) again."""
-        typed, had = "", False
-        if self.card:
-            if old := self.card.findChild(QLineEdit):  # the key box: what's typed stays across a rebuild
-                typed, had = old.text(), old.hasFocus()
-            self.card.hide()
-            self.card.deleteLater()
-        self.card, L = None, self.layer
+        """The QR card beside the selection, read like a bank receipt: verdict, amount, who, when (slipcard.model). Slips
+        are checked with Thunder once per selection: the answer is kept, so resizing doesn't ask (or spend quota) again."""
+        L = self.layer
         if not L or not L.qrs:
-            return
-        card = self.card = GlassPanel(self, "card", 30)
-        card.setAttribute(Qt.WA_NoMousePropagation)  # a click on it mustn't reach the overlay (new selection)
-        card.setCursor(Qt.ArrowCursor)
-        lay = QVBoxLayout(card)
-        lay.setContentsMargins(8, 8, 8, 8)
-        lay.setSpacing(8)
-        texts, retry, key, L.marks, wide = [], [], False, {}, False
-        for _, p in L.qrs:  # new slips are asked first: a verdict waits for every answer (one may pay the same)
-            if (k := qr_info(p)[0]) in ("slip", "truemoney") and p not in self.slips:
-                self.check_slip(k, p)
-        # to tell an edited slip: every amount OCR read here (0.00: fee lines), and what the bank says each code paid
-        found = [(r, v) for r, t in L.items for m in MONEY.findall(t) if (v := round(float(m.replace(",", "")), 2))]
-        fields = {p: slip_fields(qr_info(p)[0], s[0]) for _, p in L.qrs if (s := self.slips.get(p)) and s[0]}
-        paid = [round(f[2], 2) for _, p in L.qrs for f in fields.get(p, ()) if f[1] == "amount" and isinstance(f[2], (int, float))]
-        # ponytail: a line belongs to the code nearest it; the slip's outline (which isn't known) would be exact
-        near = lambda r: min(L.qrs, key=lambda q: (q[0].boundingRect().center() - QRectF(r).center()).manhattanLength())[0]
-        dense = len(L.qrs) > 1  # ponytail: no scrolling; tighter, 2 checked slips fit 1080p, 3 don't
-        for n, (poly, payload) in enumerate(L.qrs, 1):
-            if n > 1:  # a hairline between codes
-                lay.addWidget(rule := QWidget())
-                rule.setFixedHeight(1)
-                rule.setStyleSheet(f"background:{ink(.12).name(QColor.HexArgb)}")
-            kind, title, rows, warn = qr_info(payload)
-            slip, res, amount, table = kind in ("slip", "truemoney"), None, None, []
-            if slip and (res := self.slips[payload]) and res[0]:
-                f, rows = fields[payload], []
-                amount = next((x[2] for x in f if x[1] == "amount"), None)
-                a = round(amount, 2) if isinstance(amount, (int, float)) else None
-                # edited: printed fewer times than the codes here pay it, and not beside this one (stacked slips put
-                # one's amount nearer the next one's code, so "not beside it" alone can't say)
-                few = bool(found) and a is not None and [v for _, v in found].count(a) < paid.count(a)
-                # OCR's lines are of the crop as it was: a resized one is compared once it's read again
-                table = compare(f, [t for r, t in L.items if near(r) is poly], {v for r, v in found if near(r) is poly},
-                                few, len(L.qrs) == 1) if self.ready else [(x[0], "…", x[3], x[4], "") for x in f]
-            tone, glyph, head, sub = verdict(payload, res, table) if slip else \
-                ("info", "qr", title, "QR นี้ใช้จ่ายเงิน ไม่ใช่สลิป" if kind in ("promptpay", "emv", "bill") else "")
-            if tone == "ok" and [p for _, p in L.qrs].count(payload) > 1:  # one transfer shown twice: claimed twice?
-                tone, glyph, head, sub = "warn", "history", "สลิปเดียวกันซ้ำในภาพนี้", "ธนาคารยืนยันแค่รายการเดียว อย่ารับเงินซ้ำ"
-            elif tone == "ok" and (not self.ready or None in [self.slips.get(p, 0) for _, p in L.qrs]):
-                # no green before the image could be compared: OCR's, and the other codes' answers (one may pay the same)
-                tone, glyph, head, sub = "info", None, "กำลังเทียบข้อมูลในภาพ…", "ธนาคารยืนยันรายการแล้ว"
-            if slip and res is None:
-                sub = "อ่าน QR สลิปแล้ว · รอคำตอบจาก Thunder"
-            keyless = bool(res) and res[1] in KEYLESS
-            if keyless:  # the card takes the key itself: no file to edit, no "ตรวจใหม่" to press
-                glyph, sub = "key", "ใส่คีย์ครั้งเดียว แล้วตรวจสลิปกับธนาคารได้ทันที" if res[1] == NO_KEY else \
-                    "วางคีย์ที่ถูกต้องด้านล่าง แล้วตรวจได้ทันที"
-            retry += [payload] * bool(res and res[1] and not keyless)
-            L.marks[payload] = tone, glyph
-            lay.addLayout(top := QHBoxLayout())
-            top.setContentsMargins(14, 6 if dense else 14, 14, 4 if dense else 10)
-            top.setSpacing(14)
-            # several codes: numbered like their badges on the image, in the same colour
-            top.addWidget(Disc(44, *(TONES if isDarkTheme() else TONES_LIGHT)[tone], glyph, (str(n), tone_ink(tone)) if len(L.qrs) > 1 else None))
-            top.addLayout(text := QVBoxLayout(), 1)
-            text.setSpacing(2)
-            text.addWidget(lab(head, 17, weight=QFont.DemiBold))
-            if sub:
-                text.addWidget(lab(sub, 14, .68, sel=bool(res and res[1])))
-            if res and not keyless:  # when the bank answered
-                top.addWidget(at := lab(f"{res[2]:%H:%M}", 12, .5, mono=True))
-                at.setWordWrap(False)
-            if warn:
-                lay.addWidget(w := lab(warn.lstrip("⚠ "), 13, color=themed((255, 176, 176), (198, 40, 40))))
-                w.setContentsMargins(14, 0, 14, 0)
-            num = f"{amount:,.2f}" if isinstance(amount, (int, float)) else str(amount)
-            if amount is not None:  # the hero, as big as on the slip
-                lay.addLayout(line := QHBoxLayout())
-                line.setContentsMargins(14, 0, 14, 6)
-                line.setSpacing(8)
-                line.addWidget(big := lab(num, 32 if dense else 44, weight=QFont.DemiBold, sel=True), 0, Qt.AlignBottom)
-                big.setWordWrap(False)
-                line.addWidget(baht := lab("บาท", 17, .68), 0, Qt.AlignBottom)
-                baht.setContentsMargins(0, 0, 0, QFontMetrics(big.font()).descent() - QFontMetrics(baht.font()).descent())
-                line.addStretch()
-            if table:  # the image beside the bank, field by field; a row the image differs on, tinted red
-                wide = True
-                lay.addWidget(box := Box())
-                g = QGridLayout(box)
-                g.setContentsMargins(18, 14, 18, 15)  # CSS: the box's padding 6, its rows' 9 12, its head's 8 12 6
-                g.setHorizontalSpacing(12)
-                g.setVerticalSpacing(8 if dense else 18)
-                g.setColumnMinimumWidth(0, 88)
-                g.setColumnMinimumWidth(3, 22)
-                g.setColumnStretch(1, 1)
-                g.setColumnStretch(2, 1)
-                g.addWidget(lab("ในภาพสลิป", 12, .5), 0, 1)
-                g.addWidget(lab("ธนาคารยืนยัน", 12, .5), 0, 2)
-                for i, (k, seen, shown, under, mark) in enumerate(table, 1):
-                    mono = k.startswith("บัญชี") or k == "เลขอ้างอิง"  # numbers, as the slip prints them
-                    g.addWidget(lab(k, 13, .55), i, 0, Qt.AlignTop)
-                    g.addWidget(lab(seen or "–", 14, .78, mono=mono, sel=bool(seen), color=themed((255, 176, 176), (198, 40, 40)) if mark == "✗" else None),
-                                i, 1, Qt.AlignTop)
-                    g.addLayout(cell := QVBoxLayout(), i, 2, Qt.AlignTop)
-                    cell.setSpacing(1)
-                    cell.addWidget(lab(shown, 14, weight=QFont.DemiBold if k in ("ยอดเงิน", "ผู้โอน", "ผู้รับ") else QFont.Normal,
-                                       mono=mono, sel=True))
-                    if under:
-                        cell.addWidget(lab(under, 12, .5, sel=True))
-                    if mark:
-                        g.addWidget(Disc(22, (MARKS if isDarkTheme() else MARKS_LIGHT)[mark][1], None, MARKS[mark][0]),
-                                    i, 3, Qt.AlignTop)
-                    box.bad += [i] * (mark == "✗")
-            elif rows and not keyless and (res or not slip):  # what the code says (a slip's: once the bank answered)
-                lay.addWidget(box := Box())
-                g = QGridLayout(box)
-                g.setContentsMargins(18, 16, 18, 16)  # CSS: the box's padding 6 18, its rows' 10 0
-                g.setHorizontalSpacing(12)
-                g.setVerticalSpacing(20)
-                g.setColumnMinimumWidth(0, 96)
-                g.setColumnStretch(1, 1)
-                for i, (k, v) in enumerate(rows):
-                    if k:
-                        g.addWidget(lab(k, 13, .55), i, 0, Qt.AlignTop)
-                    mono = not THAI.search(v) and sum(c.isdigit() for c in v) >= 4  # ids, phones, refs
-                    g.addWidget(lab(v, 14, mono=mono, sel=bool(k)), i, 1 if k else 0, 1, 1 if k else 2)
-            if keyless and not key:  # one box for every slip waiting on it: saved as on the settings page, then asked again
-                lay.addWidget(box := Box())
-                v = QVBoxLayout(box)
-                v.setContentsMargins(14, 14, 14, 14)
-                v.setSpacing(10)
-                v.addWidget(t := lab("Thunder API key", 12, .6))
-                v.addLayout(h := QHBoxLayout())
-                v.addWidget(note := lab("เก็บไว้ในเครื่องนี้เท่านั้น · แก้ได้ที่หน้าตั้งค่า", 12, .5))
-                for w in (t, note):
-                    w.setContentsMargins(4, 0, 0, 0)
-                h.setSpacing(8)
-                h.addWidget(edit := QLineEdit(), 1)
-                h.addWidget(go := GlassButton(text="บันทึกและตรวจ", look="tint"))
-                edit.setEchoMode(QLineEdit.Password)
-                edit.setPlaceholderText("วางคีย์ที่นี่")
-                edit.setFixedHeight(44)
-                edit.setFont(ui_font(13, mono=True))
-                edit.setStyleSheet(field_qss(22, 15))
-                edit.setText(typed)
-                if had:
-                    edit.setFocus()
-                edit.returnPressed.connect(lambda: self.use_key(edit.text()))
-                go.clicked.connect(lambda: self.use_key(edit.text()))
-            key = key or keyless
-            texts.append("\n".join([head] + [sub] * bool(sub) + [f"จำนวนเงิน: {num} บาท"] * (amount is not None)
-                                   + [f"{k}: {shown}" + (f" ({u})" if u else "") + (f" | ในภาพ: {seen or '–'} {mark}" if mark else "")
-                                      for k, seen, shown, u, mark in table]
-                                   + [(f"{k}: " if k else "") + v for k, v in rows]
-                                   + [warn] * bool(warn) + [f"QR: {payload}"] * (kind not in ("url", "text"))))
-        buttons = []
-        if retry:
-            buttons.append(again := GlassButton("refresh", "ตรวจใหม่", look="soft"))
-            again.clicked.connect(lambda: ([self.slips.pop(p, None) for p in retry], self.show_qrs()))
-        if not key or len(L.qrs) > 1:  # a lone no-key slip has nothing to copy
-            buttons.append(copy := GlassButton("copy", "คัดลอก", look="plain"))
-            info = "\n\n".join(texts).replace("\u200b", "")
-            copy.clicked.connect(lambda: (QGuiApplication.clipboard().setText(info), self.toast.say("คัดลอกแล้ว")))
-        checked = [s for _, p in L.qrs if (s := self.slips.get(p)) and (s[0] or s[1] == THUNDER_ERRORS["SLIP_NOT_FOUND"])]
-        if self.ready and checked and None not in [self.slips.get(p, 0) for _, p in L.qrs]:  # every answer in
-            buttons.append(receipt := GlassButton("save", "บันทึกใบตรวจ", look="solid"))
-            receipt.clicked.connect(lambda: self.save_receipt(foot))
-        if buttons:
-            lay.addLayout(foot := QHBoxLayout())
-            foot.setContentsMargins(6, 4, 6, 6)
-            foot.setSpacing(8)
-            foot.addStretch()
-            for b in buttons:
-                foot.addWidget(b)
-        card.setFixedWidth(min(max(540 if wide else 420, card.minimumSizeHint().width()), self.width() - 20))  # wider for a ref that won't wrap
-        self.place_card()
+            return self.card.show(None)
+        m = model([(p, poly.boundingRect().center().toTuple()) for poly, p in L.qrs],
+                  [(t, QRectF(r).center().toTuple()) for r, t in L.items], self.slips, self.ready, Overlay.seen)
+        for kind, p in m.ask:  # new slips are asked first: a verdict waits for every answer (one may pay the same)
+            self.check_slip(kind, p)
+        L.marks = m.marks
         self.update()  # the codes on the image take the verdicts' colours
+        if self.card.busy():  # a card button held down (an answer landing mid-click): rebuilt once it's let go
+            return self.again.start()
+        self.card.show(m)
+        self.place_card()
+
+    def retry(self, payloads):  # the card's ตรวจใหม่: those slips asked again
+        for p in payloads:
+            self.slips.pop(p, None)
+        self.show_qrs()
 
     def use_key(self, k):  # the no-key card's box: thunder.key, then the slips that waited for it are asked again
         if not (k := k.strip()):
             return
         if not store_key(k):
-            return self.toast.say("คีย์ไม่ถูกต้อง: มีได้แค่ตัวอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมาย", "bad")
+            return self.chrome.say("คีย์ไม่ถูกต้อง: มีได้แค่ตัวอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมาย", "bad")
         for p in [p for p, s in self.slips.items() if s and s[1] in KEYLESS]:
             del self.slips[p]
         self.show_qrs()
@@ -665,7 +404,7 @@ class Overlay(QWidget):
         fn, self.queued = self.queued, None
         if fn:
             fn()
-        if self.card:  # the amount check needs the text: redraw once it's read
+        if self.layer.qrs:  # the amount check needs the text: redraw once it's read
             self.show_qrs()
 
     def after_ocr(self, fn):  # an action pressed while OCR is still running waits for it
@@ -677,13 +416,13 @@ class Overlay(QWidget):
     def translate_lines(self, auto=False):
         """Selected lines, or all. auto: lines were just picked; translate those, unless the original is shown."""
         L = self.layer
-        if auto and (not L.sel or self.orig_btn.isChecked()):
+        if auto and (not L.sel or self.chrome.original()):
             return
         if not auto:
-            self.orig_btn.setChecked(False)
+            self.chrome.set_original(False)
         rows = [L.items[i] for i in sorted(L.sel)] or L.items
         if not self.send([t for _, t in rows]) and not auto and not self.asked:
-            self.set_status(f"แปลเป็น{LANGS[self.lang][0]}แล้ว") if rows else self.toast.say("ไม่พบข้อความ", "bad")
+            self.set_status(f"แปลเป็น{LANGS[self.lang][0]}แล้ว") if rows else self.chrome.say("ไม่พบข้อความ", "bad")
 
     def send(self, texts):  # translate these, except what's done or on its way; True if any went
         L, lang = self.layer, self.lang
@@ -699,32 +438,23 @@ class Overlay(QWidget):
             return
         self.asked -= set(lines)
         self.layer.add_tr(lines, tr)
-        self.orig_btn.setEnabled(True)
+        self.chrome.set_original(enabled=True)
         self.set_status(f"แปลเป็น{LANGS[lang][0]}แล้ว {len(lines)} บรรทัด")
 
-    def lang_menu(self):  # the translate capsule's arrow
-        m = GlassMenu(self, [(None, n, "", c == self.lang, lambda c=c: self.set_lang(c)) for c, (n, _) in LANGS.items()],
-                      232, "แปลเป็น")
-        m.popup(self.drop(self.tr_btn.parentWidget(), m))
-
-    def ink_menu(self):  # the toolbar's dot
-        self.inks.popup(self.drop(self.ink_btn.parentWidget(), self.inks))
-
-    def set_ink(self, c):
-        self.color = self.ink_btn.swatch = c
-        self.ink_btn.update()
+    def set_ink(self, c):  # the toolbar's dot and the popover show it (chrome)
+        self.color = c
 
     def set_lang(self, code):  # what was translated is redone in the new language; nothing yet: translate now
         if code == self.lang:
             return self.after_ocr(self.translate_lines)
         Overlay.lang = code
-        self.tr_btn.setText(f"แปล · {LANGS[code][0]}")
+        self.chrome.set_translate_title(f"แปล · {LANGS[code][0]}")
         self.place_bar()  # the button's width changed
         L = self.layer
         redo = [t for _, t in L.items if t in L.tr or t in self.asked]
         L.tr, self.asked = {}, set()
         L.layout()
-        self.orig_btn.setChecked(False)
+        self.chrome.set_original(False)
         self.update()
         if not self.send(redo):
             self.after_ocr(self.translate_lines)
@@ -737,9 +467,13 @@ class Overlay(QWidget):
     def copy_text(self):
         lines = self.layer.texts()
         if not lines:
-            return self.toast.say("ไม่พบข้อความ", "bad")
+            return self.chrome.say("ไม่พบข้อความ", "bad")
         QGuiApplication.clipboard().setText("\n".join(lines))
-        self.toast.say(f"คัดลอกข้อความแล้ว {len(lines)} บรรทัด")
+        self.chrome.say(f"คัดลอกข้อความแล้ว {len(lines)} บรรทัด")
+
+    def copy_card(self, text):  # the card's คัดลอก: what its codes say
+        QGuiApplication.clipboard().setText(text)
+        self.chrome.say("คัดลอกแล้ว")
 
     def copy_image(self):
         self.end_edit()
@@ -755,20 +489,19 @@ class Overlay(QWidget):
                 Overlay.folder = os.path.dirname(path)
                 self.closed.emit()
             else:  # the capture stays: save it elsewhere
-                self.toast.say("บันทึกรูปไม่สำเร็จ", "bad")
+                self.chrome.say("บันทึกรูปไม่สำเร็จ", "bad")
 
     def ask_path(self, title, path, types):  # where to save: the dialog over this (above the menu bar)
+        self.chrome.escape()  # the ink popover shut first: its monitor would eat the dialog's first click
         with mac.under_dialogs(self):
             return QFileDialog.getSaveFileName(self, title, os.path.normpath(path), types)[0]
 
-    def save_receipt(self, foot):
-        """The card (its buttons cut off) beside the slip's own pixels, in screen px, and when it was checked; made
-        before the file dialog, whose event loop may rebuild the card when an answer lands."""
-        card, L, k = self.card, self.layer, self.k
-        card.flat = True  # nothing of the screen behind it goes in the file
-        pm = card.grab(QRect(0, 0, card.width(), foot.geometry().top()))
-        card.flat = False
-        pm.setDevicePixelRatio(1)  # the grab is in device px, as the screenshot is
+    def save_receipt(self):
+        """The card (its buttons cut off, opaque: nothing of the screen behind it) beside the slip's own pixels, in
+        screen px, and when it was checked; made before the file dialog, whose event loop may rebuild the card when
+        an answer lands."""
+        L, k = self.layer, self.k
+        pm = QImage.fromData(self.card.receipt_png(k, NSAppearanceNameDarkAqua if isDarkTheme() else NSAppearanceNameAqua))
         slip, (bg, edge) = L.img.copy(L.crop), chrome()
         when = max(s[2] for s in self.slips.values() if s)
         note = f"ตรวจเมื่อ {when.day} {TH_MONTHS[when.month - 1]} {when.year + 543} {when:%H:%M:%S} น. · Thunder API · Snaplens v{VERSION}"
@@ -779,7 +512,7 @@ class Overlay(QWidget):
         p = QPainter(out)
         p.drawImage(pad, pad, slip)
         x = 2 * pad + slip.width()
-        p.drawPixmap(x, pad, pm)
+        p.drawImage(x, pad, pm)
         p.setPen(QColor(edge))  # close the card where its buttons were cut off
         p.drawLine(x, pad + pm.height() - 1, x + pm.width() - 1, pad + pm.height() - 1)
         p.setFont(f)
@@ -792,7 +525,7 @@ class Overlay(QWidget):
         path = self.ask_path("บันทึกใบตรวจ", os.path.join(folder, f"slip_{when:%Y%m%d-%H%M%S}{amount}.png"), "PNG (*.png)")
         if path:  # names and accounts in it: only where the user puts it
             Overlay.folder = os.path.dirname(path)
-            self.toast.say(*(("บันทึกใบตรวจแล้ว", "save") if out.save(path, "PNG") else ("บันทึกใบตรวจไม่สำเร็จ", "bad")))
+            self.chrome.say(*(("บันทึกใบตรวจแล้ว", "save") if out.save(path, "PNG") else ("บันทึกใบตรวจไม่สำเร็จ", "bad")))
 
     def undo(self):
         if self.layer and self.layer.shapes:
@@ -802,25 +535,19 @@ class Overlay(QWidget):
     def set_tool(self, name):
         self.end_edit()
         self.tool = name
-        self.tools.button([t[0] for t in self.TOOLS].index(name)).setChecked(True)
+        self.chrome.set_tool(name)
         self.update()
 
-    def context_menu(self, pos):  # right-click on a selection: what can be done with it, at the mouse
+    def context_menu(self, pos):  # right-click on a selection (or the toolbar): what can be done with it, at the mouse
         L = self.layer
         if self.tool != "select":  # drawing: the ink's colour and how big this tool draws
-            return self.inks.popup(pos.toPoint())
+            return self.chrome.inks(pos)
         i = L.hit(self.to_layer(pos).toPoint())
         if i is not None and i not in L.sel:  # right-click on a line selects it, like text anywhere else
             L.sel = {i}
             self.translate_lines(auto=True)
             self.update()
-        what = "ที่เลือก" if L.sel else "ทั้งหมด"
-        GlassMenu(self, [("translate", f"แปล{what}เป็น{LANGS[self.lang][0]}", "", False, lambda: self.after_ocr(self.translate_lines)),
-                         ("copy", f"คัดลอกข้อความ{what}", "", False, lambda: self.after_ocr(self.copy_text)),
-                         ("image", "คัดลอกรูปแล้วปิด", f"{CTRL}+C", False, self.copy_image),
-                         ("save", "บันทึกรูป", f"{CTRL}+S", False, self.save), None,
-                         ("capture", "เลือกพื้นที่ใหม่", "", False, self.reset),
-                         ("close", "ปิด", "Esc", False, lambda: self.closed.emit())], 290).popup(pos.toPoint())
+        self.chrome.context_menu(pos)  # แปล, คัดลอกข้อความ, คัดลอกรูปแล้วปิด, บันทึกรูป | เลือกพื้นที่ใหม่, ปิด
 
     def start_edit(self, pos):  # text tool: type in place, Enter (or clicking elsewhere) puts it on the image
         e = self.edit = QLineEdit(self)
@@ -891,7 +618,6 @@ class Overlay(QWidget):
             p.drawRoundedRect(f.adjusted(1, 1, -1, -1), 17, 17)
             p.restore()
             self._tag(p, f, f"{s.width()} × {s.height()}", "สลิป · คลิกเพื่อเลือก" if h in self.qr_picks else "คลิกเพื่อเลือก")
-        self.shadows(p)
         if self.band:
             p.setPen(QPen(QColor("#4285f4"), 1, Qt.DashLine))
             p.drawRect(QRect(*self.band).normalized())
@@ -920,10 +646,11 @@ class Overlay(QWidget):
 
     def _tag(self, p, f, size, text="", dot=None):
         """G1/G3's glass label on a frame f (its outside): the size, then what's going on after a dot of its colour.
-        12 above f, else inside its top; never under the hint bar or the toolbar (children: they'd paint over it)."""
+        12 above f, else inside its top; never under the hint bar or the toolbar (native: they'd show over it)."""
         sw, tw = QFontMetrics(ui_font(13, mono=True)).horizontalAdvance(size), QFontMetrics(ui_font(13)).horizontalAdvance(text)
         w = 28 + sw + (21 + (13 if dot else 0) + tw if text else 0)  # CSS: padding 0 14, gap 10, a 1px rule; dot 7 + 6
-        x, over = max(0, min(f.left(), self.width() - w)), [QRectF(b.geometry()) for b in (self.hints, self.bar) if b.isVisible()]
+        x, over = max(0, min(f.left(), self.width() - w)), \
+            [QRectF(b) for b in (self.chrome.hints_frame(), self.chrome.bar_frame()) if b is not None]
         ys = ([f.top() - 48] if f.top() >= 48 else []) + [f.top() + 8] + [b.bottom() + 9 for b in over]
         box = next((b for b in (QRectF(x, y, w, 36) for y in ys) if not any(b.intersects(o) for o in over)), QRectF(x, ys[0], w, 36))
         p.drawImage(box.topLeft() + QPointF(-28, 10 - 28), shadow(round(w), 36, 18, 28, (0, 0, 0, .3)))
@@ -994,14 +721,13 @@ class Overlay(QWidget):
     def mousePressEvent(self, e):
         pos, pt = e.position(), e.position().toPoint()
         self.end_edit()
+        if (w := self.view.window()) is not None:  # any button, as Qt's ClickFocus: the keys come back from the card
+            w.makeFirstResponder_(self.view)  # (AppKit moves them on a left press only)
         if e.button() == Qt.RightButton:
             if not self.layer:  # like ShareX: drop a half-made selection, or exit
                 return self.reset() if self.a is not None else self.closed.emit()
             if self.drag:
                 return None
-            b = self.childAt(pt)  # a tool's button: that tool, then its size
-            if b in self.tools.buttons():
-                b.click()
             return self.context_menu(pos)
         if e.button() != Qt.LeftButton:
             return
@@ -1011,9 +737,8 @@ class Overlay(QWidget):
             self.a = QPoint(r.right() if gx < 0 else r.left(), r.bottom() if gy < 0 else r.top())
             self.b = QPoint(r.left() if gx < 0 else r.right(), r.top() if gy < 0 else r.bottom())
             self.drag, self.grip = "resize", (gx, gy, L.crop, self.b)
-            self.bar.hide()
-            if self.card:
-                self.card.hide()
+            self.chrome.show_bar(False)
+            self.card.hide()
             return self.update()
         if L and self.sel_rect().contains(pt):  # work on the selection with the current tool
             if self.tool == "select":
@@ -1030,13 +755,15 @@ class Overlay(QWidget):
             return
         pick = self.hover if self.hover is not None else self.pick_at(pt)  # a click (not a drag) takes it
         self.reset()
-        self.hints.hide()
+        self.chrome.hints(False)
         self.started.emit()
         self.a = self.b = self.cur = pt
         self.drag, self.pick = "region", pick
 
     def mouseMoveEvent(self, e):
         pos, pt = e.position(), e.position().toPoint()
+        if not self.drag and self.chrome.covers(pt):  # on the toolbar or the card (their moves reach Qt too): an
+            return self.setCursor(Qt.ArrowCursor)  # arrow, and nothing under them lit or magnified, as on Qt's chrome
         self.cur, L = pt, self.layer
         if self.drag == "region":
             self.b = pt
@@ -1119,9 +846,12 @@ class Overlay(QWidget):
             self.open_layer()
         self.update()
 
+    def escape(self):  # Esc: drops a text-tool edit, else the capture (from the card's key field too)
+        return self.end_edit(False) if self.edit else self.closed.emit()
+
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
-            return self.end_edit(False) if self.edit else self.closed.emit()
+            return self.escape()
         if not self.layer:
             return
         if e.matches(QKeySequence.Copy):  # the result as shown (translations, drawings), like ShareX/Snipaste
@@ -1137,4 +867,7 @@ class Overlay(QWidget):
 
     def closeEvent(self, e):
         self.gen += 1  # OCR/translation still running would report to a closed window: drop it
+        self.again.stop()
+        self.chrome.close()  # nothing native left on the view, nothing left to call back
+        self.card.close()
         super().closeEvent(e)

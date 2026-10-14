@@ -32,10 +32,10 @@ def nswindow(w):
 
 
 def cover(w):
-    """w over everything, the menu bar and the Dock too, on every Space and over full-screen apps. Not Qt's
-    showFullScreen: on a Mac that's a Space of its own, slid in."""
+    """w over the menu bar and the Dock, on every Space and over full-screen apps; under menus, popovers and tooltips
+    (the capture's own: its chrome is native). Not Qt's showFullScreen: on a Mac that's a Space of its own, slid in."""
     n = nswindow(w)
-    n.setLevel_(Quartz.CGShieldingWindowLevel() - 1)  # under the screen saver and the login window only
+    n.setLevel_(AppKit.NSPopUpMenuWindowLevel - 1)  # 100: over the menu bar (24), the Dock (20), status items (25)
     n.setCollectionBehavior_(AppKit.NSWindowCollectionBehaviorCanJoinAllSpaces
                              | AppKit.NSWindowCollectionBehaviorFullScreenAuxiliary)
     n.setHasShadow_(False)

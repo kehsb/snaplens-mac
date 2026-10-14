@@ -9,9 +9,7 @@ OTHER_ENGINES = (".openvino", ".paddle", ".pytorch", ".mnn", ".tensorrt")  # onl
 VERSION = re.search(r'^VERSION = "([\d.]+)"', open("smartshot/config.py", encoding="utf-8").read(), re.M)[1]
 
 datas = [(src, dst) for src, dst in collect_data_files("rapidocr") if not src.endswith(UNUSED)]
-datas += [("assets/icons/app.svg", "assets/icons"), ("assets/icons/app-256.png", "assets/icons")]
-datas += [("assets/fonts", "assets/fonts")]  # Anuphan, Geist Mono and their OFL licences (which go with them)
-datas += [(f"assets/icons/tray-light-{px}.png", "assets/icons") for px in (16, 20, 24, 32)]
+datas += [("assets/icons/app-256.png", "assets/icons"), ("assets/icons/tray-light-32.png", "assets/icons")]
 hidden = collect_submodules("rapidocr", filter=lambda name: not any(e in name for e in OTHER_ENGINES))  # lazy imports
 
 DROP = ("qtquick", "qtqml", "qtpdf", "qtvirtualkeyboard", "qtwebengine", "pyside6/translations/")  # QML, PDF: unused

@@ -7,6 +7,7 @@ import os
 import AppKit
 import objc
 from Foundation import NSMakeRect, NSMakeSize, NSObject
+from PySide6.QtCore import QTimer
 
 from smartshot.config import ASSETS, TRAY, VERSION
 from smartshot.slip.thunder import store_key, thunder_key
@@ -193,7 +194,7 @@ class SettingsWindow:
         self.api_row.say(("•" * 8 + (k[-4:] if len(k) > 8 else "")) if k else "ยังไม่มีคีย์ · ต้องใช้ตอนตรวจสลิป")
         self.api_btn.setTitle_("แก้ไข…" if k else "ใส่คีย์…")
         self.boot.setState_(AppKit.NSControlStateValueOn if autostart() else AppKit.NSControlStateValueOff)
-        self.caption.setStringValue_(f"หรือคลิกไอคอนที่{TRAY}")
+        self.caption.setStringValue_(f"หรือเลือก แคปหน้าจอ จากไอคอนที่{TRAY}")
         for v in list(self.states.arrangedSubviews()):
             self.states.removeView_(v)
         for title, line, ok in m.states():
@@ -312,7 +313,6 @@ class SettingsWindow:
             if answer != AppKit.NSAlertFirstButtonReturn or not k:
                 return
             if not store_key(k):
-                return AppKit.NSOperationQueue.mainQueue().addOperationWithBlock_(
-                    lambda: self.ask_key("คีย์ไม่ถูกต้อง: ใช้ได้แค่ อักษรอังกฤษ ตัวเลข และเครื่องหมาย"))
+                return QTimer.singleShot(0, lambda: self.ask_key("คีย์ไม่ถูกต้อง: ใช้ได้แค่ อักษรอังกฤษ ตัวเลข และเครื่องหมาย"))
             self.main.refresh()
         a.beginSheetModalForWindow_completionHandler_(self.window, done)

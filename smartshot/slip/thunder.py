@@ -15,10 +15,10 @@ from smartshot.qr.promptpay import BANKS, bank_time, money, phone, thai_time
 THUNDER = "https://api.thunder.in.th/v2"  # slip verification, https://document.thunder.in.th/th/v2/
 KEY_FILE = (os.path.join(DATA, "thunder.key") if FROZEN  # kept through reinstalls
             else os.path.join(HERE, "thunder.key"))  # git-ignored
-NO_KEY = f"ยังไม่มี API key ของ Thunder: ใส่คีย์ที่ ตั้งค่า (คลิกขวาไอคอนที่{TRAY}) หรือในไฟล์นี้ แล้วกด ตรวจใหม่"  # + KEY_FILE
+NO_KEY = f"ยังไม่มี API key ของ Thunder: ใส่คีย์ที่ ตั้งค่า (เปิดจากไอคอนที่{TRAY}) หรือในไฟล์นี้ แล้วกด ตรวจใหม่"  # + KEY_FILE
 THUNDER_ERRORS = {  # error.code -> "what: what to do" for the card (branch on the code: Thunder's messages change)
     "MISSING_API_KEY": NO_KEY,
-    "INVALID_API_KEY": f"API key ของ Thunder ไม่ถูกต้อง: แก้ที่ ตั้งค่า (คลิกขวาไอคอนที่{TRAY}) หรือในไฟล์นี้ แล้วกด ตรวจใหม่",
+    "INVALID_API_KEY": f"API key ของ Thunder ไม่ถูกต้อง: แก้ที่ ตั้งค่า (เปิดจากไอคอนที่{TRAY}) หรือในไฟล์นี้ แล้วกด ตรวจใหม่",
     "SLIP_NOT_FOUND": "ไม่พบรายการนี้ในระบบธนาคาร: อาจเป็นสลิปปลอม หรือเก่าเกินกว่าจะตรวจได้ (7-30 วัน)",
     "SLIP_PENDING": "สลิปธนาคารกรุงเทพยังไม่เข้าระบบ (ช่วง 5 นาทีแรก): รอสักครู่แล้วกด ตรวจใหม่",
     "QUOTA_EXCEEDED": "โควต้า Thunder หมดแล้ว", "SERVICE_EXPIRED": "แพ็กเกจ Thunder หมดอายุ",

@@ -11,6 +11,7 @@ from qfluentwidgets import Theme, setTheme
 from smartshot.system import mac
 from smartshot.ui.assets import setup_app
 from smartshot.ui.main import Main
+from smartshot.ui.native import install_edit_menu
 
 
 if __name__ == "__main__":
@@ -21,6 +22,7 @@ if __name__ == "__main__":
         os._exit(0)
     app.setQuitOnLastWindowClosed(False)
     mac.accessory()  # no Dock icon: it lives in the menu bar
+    install_edit_menu()  # ⌘X ⌘C ⌘V ⌘A in native text fields: the card's key box, the settings' key sheet
     setup_app(app)
     setTheme(Theme.AUTO)
     m = Main()  # no window: it starts in the menu bar

@@ -3,10 +3,10 @@
 แอปแถบเมนูสำหรับแคปหน้าจอแล้ว **อ่านข้อความ (OCR) จีน อังกฤษ ไทย และแปลทับลงบนภาพ** ตรงตำแหน่งเดิม
 อ่าน QR code ในภาพได้ (PromptPay และอื่นๆ) และตรวจสลิปโอนเงินกับธนาคารผ่าน [Thunder API](https://document.thunder.in.th/th/v2/)
 
-- กด **⌃⌥S** (Control+Option+S) หรือคลิกไอคอนที่แถบเมนู เพื่อแคป
+- กด **⌃⌥S** (Control+Option+S) หรือเลือก แคปหน้าจอ จากไอคอนที่แถบเมนู เพื่อแคป
 - ลากเลือกพื้นที่ หรือคลิกเลือกกรอบที่ไฮไลต์ แล้ว OCR จะเริ่มอ่านทันที
 - เลือกบรรทัดแล้วแปล, วาด, เบลอ, คัดลอกรูป (⌘C) หรือบันทึก (⌘S)
-- คลิกขวาที่ไอคอนเพื่อเปิดเมนู: เลือกภาษาที่อ่าน และเปิดหน้าตั้งค่า
+- เมนูของไอคอนที่แถบเมนู: แคปหน้าจอ เลือกภาษาที่อ่าน และเปิดหน้าตั้งค่า
 
 OCR ทำงานในเครื่องด้วย [RapidOCR](https://github.com/RapidAI/RapidOCR) (PP-OCR บน onnxruntime) ส่วนการแปลส่งข้อความที่เลือกไปยังบริการแปลออนไลน์
 
@@ -57,10 +57,10 @@ tccutil reset ScreenCapture io.github.kehsb.snaplens
 | โฟลเดอร์ | หน้าที่ |
 |---|---|
 | `app.py` | จุดเริ่ม: แอปเดียว ไม่มี Dock icon |
-| `smartshot/ui/` | `main.py` แอปและเมนู, `settings.py` หน้าตั้งค่า (AppKit), `overlay.py` หน้าแคป |
+| `smartshot/ui/` | `main.py` แอป, `menubar.py` ไอคอนและเมนูที่แถบเมนู, `notify.py` การแจ้งเตือน, `settings.py` หน้าตั้งค่า, `overlay.py` หน้าแคป, `chrome.py` แถบเครื่องมือของหน้าแคป, `slipcard.py` การ์ด QR และสลิป (AppKit ทั้งหมด ยกเว้นภาพใน `overlay.py`) |
 | `smartshot/system/` | `mac.py` (AppKit, Quartz, Carbon): จับภาพ, คีย์ลัด, หน้าต่างเหนือแถบเมนู; `autostart.py` |
 | `smartshot/ocr/`, `qr/`, `slip/` | OCR และแปล, อ่าน QR, ตรวจสลิป |
 
 ## License
 
-[MIT](LICENSE) · ฟอนต์ Anuphan และ Geist Mono ใช้ [SIL Open Font License](assets/fonts/)
+[MIT](LICENSE)
