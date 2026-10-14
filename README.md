@@ -31,7 +31,7 @@ python3.13 -m venv .venv
 ./build.sh
 ```
 
-ได้ `dist/Snaplens.app` และ `installer/Snaplens-<version>.dmg`
+ได้ `dist/Snaplens.app` และ `installer/Snaplens-<version>.dmg` แล้วติดตั้งลง `/Applications/Snaplens.app` ให้ด้วย (ถ้าตัวใน Applications เปิดอยู่ จะปิดแล้วเปิดตัวใหม่ให้เอง)
 
 แอปเซ็นด้วย certificate ที่ `build.sh` สร้างไว้ใน login keychain ของเครื่องนั้นเอง (ชื่อ "Snaplens Local Signing") จึงให้สิทธิ์บันทึกหน้าจอครั้งเดียวแล้วใช้ได้ทุก build
 ไม่ได้เซ็นด้วย Apple Developer ID: เครื่องอื่นต้องคลิกขวา > Open ตอนเปิดครั้งแรก

@@ -1,5 +1,6 @@
 #!/bin/sh
-# Snaplens.app (PyInstaller, smartshot.spec) -> installer/Snaplens-<version>.dmg, on a Mac: build.bat's counterpart.
+# Snaplens.app (PyInstaller, smartshot.spec) -> installer/Snaplens-<version>.dmg, and installed in /Applications (one
+# running from there quits for it and starts again).
 # Signed by this Mac's own "Snaplens Local Signing" certificate (made here the first time, kept in the login keychain):
 # Screen Recording, granted once, holds for every build signed by it. No Developer ID: on another Mac the first open
 # is right-click > Open.
@@ -28,3 +29,14 @@ cp -R dist/Snaplens.app build/dmg/
 ln -s /Applications build/dmg/Applications  # drag it there
 hdiutil create -quiet -volname Snaplens -srcfolder build/dmg -format UDZO "installer/Snaplens-$VER.dmg"
 echo "installer/Snaplens-$VER.dmg"
+
+APP=/Applications/Snaplens.app
+was=""
+if pkill -f "$APP/Contents/MacOS/smartshot"; then  # its files are about to be replaced
+    was=1
+    while pgrep -f "$APP/Contents/MacOS/smartshot" >/dev/null; do sleep .2; done
+fi
+rm -rf "$APP"
+ditto dist/Snaplens.app "$APP"
+[ -z "$was" ] || open "$APP"
+echo "$APP"
