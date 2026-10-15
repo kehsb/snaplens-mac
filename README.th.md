@@ -13,8 +13,12 @@
   ถอดรหัส QR และตรวจสลิปโอนเงินของธนาคารไทย
 </p>
 
+> [!IMPORTANT]
+> นี่คือแบรนช์ **ThunderAPI** คือ Snaplens ที่ตรวจสลิปโอนเงินของธนาคารไทยผ่าน Thunder API ได้ ตัวแอปของแบรนช์นี้คือ
+> release [v0.16.0](https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0) ตั้งแต่ 0.17.0 [แบรนช์ main](https://github.com/kehsb/snaplens-mac) เป็นแอปแคปหน้าจอที่ไม่มีการตรวจสลิป
+
 <p align="center">
-  <a href="https://github.com/kehsb/snaplens-mac/releases/latest"><img src="https://img.shields.io/github/v/release/kehsb/snaplens-mac?label=release" alt="เวอร์ชันล่าสุด"></a>
+  <a href="https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0"><img src="https://img.shields.io/badge/release-v0.16.0-blue" alt="Release v0.16.0"></a>
   <img src="https://img.shields.io/badge/macOS-26%20Tahoe-000000?logo=apple&logoColor=white" alt="macOS 26 Tahoe">
   <img src="https://img.shields.io/badge/Apple%20Silicon-arm64-000000" alt="รองรับเฉพาะ Apple Silicon (arm64)">
   <img src="https://img.shields.io/badge/UI-Thai-0A84FF" alt="หน้าตาแอปเป็นภาษาไทย">
@@ -25,7 +29,7 @@
   <a href="https://github.com/kehsb/snaplens-mac/releases/download/v0.16.0/Snaplens-0.16.0.dmg"><img src="https://img.shields.io/badge/Download%20for%20Mac-Snaplens%200.16.0-0A84FF?style=for-the-badge&logo=apple&logoColor=white" alt="ดาวน์โหลด Snaplens 0.16.0 สำหรับ Mac"></a>
   <br>
   <sub>Snaplens-0.16.0.dmg · 173 MB · macOS 26 Tahoe · Apple Silicon ·
-  <a href="https://github.com/kehsb/snaplens-mac/releases/latest">เวอร์ชันล่าสุด</a> ·
+  <a href="https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0">Release v0.16.0</a> ·
   <a href="#ติดตั้ง">วิธีติดตั้ง</a></sub>
 </p>
 
@@ -81,7 +85,7 @@
 
 | | |
 |---|---|
-| **เวอร์ชันล่าสุด** | <https://github.com/kehsb/snaplens-mac/releases/latest> |
+| **Release** | <https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0> |
 | **Snaplens 0.16.0** | [Snaplens-0.16.0.dmg](https://github.com/kehsb/snaplens-mac/releases/download/v0.16.0/Snaplens-0.16.0.dmg) (173 MB, Apple Silicon) |
 | **SHA-256** | `fe62cb556b2351d90939fe9d239aeb37744351feb1c0869b8fb1ac450e472007` |
 
@@ -486,6 +490,7 @@ Snaplens สร้างขึ้นบนโปรเจกต์โอเพ�
 **แอปสำเร็จรูป (DMG)** มีคอมโพเนนต์ของบุคคลที่สามที่ใช้สัญญาอนุญาตของตัวเองรวมอยู่ด้วย ซึ่ง MIT License ไม่ครอบคลุม ได้แก่
 
 - **LGPL-3.0:** PySide6 / Qt
+- **GPL-3.0:** PySide6-Fluent-Widgets เฉพาะใน DMG ของ v0.16.0 (ในซอร์สโค้ดเอาออกไปแล้ว)
 - **LGPL-2.1:** GEOS ที่มากับ shapely
 - **GPL-3.0-or-later:** FFmpeg ที่มากับ wheel ของ opencv-python (`libavcodec`, `libavformat`, `libavutil`, `libswscale` และไลบรารีอื่นของ FFmpeg ซึ่งบิลด์ด้วย `--enable-gpl --enable-version3`) รวมถึงไลบรารี GPL ที่ FFmpeg ลิงก์อยู่ ได้แก่ `libx264`, `libx265`, `libpostproc`, `librubberband` และ `libvidstab`
 

@@ -13,8 +13,13 @@
   decodes QR codes and checks Thai bank-transfer slips.
 </p>
 
+> [!IMPORTANT]
+> This is the **ThunderAPI** branch: Snaplens with Thai bank-slip verification through Thunder API. Its build is
+> release [v0.16.0](https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0). From 0.17.0, the [main branch](https://github.com/kehsb/snaplens-mac) is a screen capture tool without slip
+> verification.
+
 <p align="center">
-  <a href="https://github.com/kehsb/snaplens-mac/releases/latest"><img src="https://img.shields.io/github/v/release/kehsb/snaplens-mac?label=release" alt="Latest release"></a>
+  <a href="https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0"><img src="https://img.shields.io/badge/release-v0.16.0-blue" alt="Release v0.16.0"></a>
   <img src="https://img.shields.io/badge/macOS-26%20Tahoe-000000?logo=apple&logoColor=white" alt="macOS 26 Tahoe">
   <img src="https://img.shields.io/badge/Apple%20Silicon-arm64-000000" alt="Apple Silicon (arm64) only">
   <img src="https://img.shields.io/badge/UI-Thai-0A84FF" alt="Interface language: Thai">
@@ -25,7 +30,7 @@
   <a href="https://github.com/kehsb/snaplens-mac/releases/download/v0.16.0/Snaplens-0.16.0.dmg"><img src="https://img.shields.io/badge/Download%20for%20Mac-Snaplens%200.16.0-0A84FF?style=for-the-badge&logo=apple&logoColor=white" alt="Download Snaplens 0.16.0 for Mac"></a>
   <br>
   <sub>Snaplens-0.16.0.dmg · 173 MB · macOS 26 Tahoe · Apple Silicon ·
-  <a href="https://github.com/kehsb/snaplens-mac/releases/latest">Latest release</a> ·
+  <a href="https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0">Release v0.16.0</a> ·
   <a href="#install">Install guide</a></sub>
 </p>
 
@@ -92,7 +97,7 @@
 
 | | |
 |---|---|
-| **Latest release** | <https://github.com/kehsb/snaplens-mac/releases/latest> |
+| **Release** | <https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0> |
 | **Snaplens 0.16.0** | [Snaplens-0.16.0.dmg](https://github.com/kehsb/snaplens-mac/releases/download/v0.16.0/Snaplens-0.16.0.dmg) (173 MB, Apple Silicon) |
 | **SHA-256** | `fe62cb556b2351d90939fe9d239aeb37744351feb1c0869b8fb1ac450e472007` |
 
@@ -582,6 +587,7 @@ The **prebuilt app (DMG)** also contains third-party components under their own 
 not cover, including:
 
 - **LGPL-3.0:** PySide6 / Qt
+- **GPL-3.0:** PySide6-Fluent-Widgets, in the v0.16.0 DMG only (the source has dropped it since)
 - **LGPL-2.1:** GEOS, shipped with shapely
 - **GPL-3.0-or-later:** FFmpeg as shipped inside the opencv-python wheel (`libavcodec`, `libavformat`, `libavutil`,
   `libswscale` and the other FFmpeg libraries, built with `--enable-gpl --enable-version3`), together with the GPL
