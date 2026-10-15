@@ -21,11 +21,11 @@ import objc
 from Foundation import NSMakeRange, NSMakeRect, NSObject
 from PySide6.QtCore import QTimer
 
-from smartshot.config import THAI
-from smartshot.qr.promptpay import TH_MONTHS, qr_info
-from smartshot.slip.compare import compare
-from smartshot.slip.thunder import NO_KEY, THUNDER_ERRORS, slip_fields
-from smartshot.ui.native import GLASS, Surface, box, dynamic, fixed, glass, pin, srgb, stack, symbol, target
+from snaplens.config import THAI
+from snaplens.qr.promptpay import TH_MONTHS, qr_info
+from snaplens.slip.compare import compare
+from snaplens.slip.thunder import NO_KEY, THUNDER_ERRORS, slip_fields
+from snaplens.ui.native import GLASS, Surface, box, dynamic, fixed, glass, pin, srgb, stack, symbol, target
 
 # verdict -> the head disc: fill, line (design: these colours are for verdicts, nowhere else); dark, light
 TONES = {"ok": ((52, 199, 120, .55), (140, 240, 180, .5)), "warn": ((255, 170, 40, .55), (255, 214, 140, .5)),

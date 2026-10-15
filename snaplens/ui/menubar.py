@@ -7,9 +7,9 @@ import objc
 from Foundation import NSMakeSize, NSObject
 from PySide6.QtWidgets import QApplication
 
-from smartshot.config import ASSETS, TITLE
-from smartshot.ui.native import menu, reported
-from smartshot.ui.settings import FLAGS
+from snaplens.config import ASSETS, TITLE
+from snaplens.ui.native import menu, reported
+from snaplens.ui.settings import FLAGS
 
 # system/mac.py's key names -> the character a menu shows them by (a letter, a digit or a sign is itself)
 KEYS = {"esc": "\x1b", "enter": "\r", "num enter": AppKit.NSEnterCharacter, "backspace": AppKit.NSBackspaceCharacter,

@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from deep_translator import GoogleTranslator, MyMemoryTranslator
 
-from smartshot.config import CJK, LANGS, PINYIN, THAI
+from snaplens.config import CJK, LANGS, PINYIN, THAI
 
 
 def translate(lines, target="th"):

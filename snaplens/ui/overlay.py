@@ -9,19 +9,19 @@ from PySide6.QtGui import (QBrush, QColor, QCursor, QFont, QFontMetrics, QGuiApp
                            QPainter, QPainterPath, QPen, QPixmap, QPolygonF, QRegion, QTransform)
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QWidget
 
-from smartshot.config import CTRL, LANGS, VERSION
-from smartshot.ocr.engine import ocr
-from smartshot.ocr.translate import translate
-from smartshot.qr.promptpay import TH_MONTHS, qr_info
-from smartshot.qr.scan import panels, scan_qr
-from smartshot.slip.thunder import slip_fields, store_key, verify_slip
-from smartshot.system import mac
-from smartshot.task import Task
-from smartshot.ui.assets import font, glyph_svg, ui_font
-from smartshot.ui.chrome import Chrome
-from smartshot.ui.glass import DIM, chrome, clear, frame_shadow, frost, ink, paint_glass, qimage, rgba, rim, shadow
-from smartshot.ui.native import host
-from smartshot.ui.slipcard import KEYLESS, TONES, SlipCard, model, tone_rgb
+from snaplens.config import CTRL, LANGS, VERSION
+from snaplens.ocr.engine import ocr
+from snaplens.ocr.translate import translate
+from snaplens.qr.promptpay import TH_MONTHS, qr_info
+from snaplens.qr.scan import panels, scan_qr
+from snaplens.slip.thunder import slip_fields, store_key, verify_slip
+from snaplens.system import mac
+from snaplens.task import Task
+from snaplens.ui.assets import font, glyph_svg, ui_font
+from snaplens.ui.chrome import Chrome
+from snaplens.ui.glass import DIM, chrome, clear, frame_shadow, frost, ink, paint_glass, qimage, rgba, rim, shadow
+from snaplens.ui.native import host
+from snaplens.ui.slipcard import KEYLESS, TONES, SlipCard, model, tone_rgb
 
 
 def tone_ink(tone):  # a verdict's colour, solid: its code's box and badge on the image, the tag's dot

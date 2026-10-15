@@ -1,20 +1,25 @@
 """Bank slips checked with Thunder: the API key, the call, and the fields of its answer."""
 import base64
+import errno
 import json
 import os
 import re
+import shutil
 import urllib.error
 import urllib.request
 
 import cv2
 
-from smartshot.config import DATA, FROZEN, HERE, TRAY, VERSION
-from smartshot.qr.promptpay import BANKS, bank_time, money, phone, thai_time
+from snaplens.config import DATA, FROZEN, HERE, OLD_DATA, TRAY, VERSION
+from snaplens.qr.promptpay import BANKS, bank_time, money, phone, thai_time
+from snaplens.system.prefs import installed
 
 
 THUNDER = "https://api.thunder.in.th/v2"  # slip verification, https://document.thunder.in.th/th/v2/
 KEY_FILE = (os.path.join(DATA, "thunder.key") if FROZEN  # kept through reinstalls
             else os.path.join(HERE, "thunder.key"))  # git-ignored
+OLD_KEY = os.path.join(OLD_DATA, "thunder.key") if FROZEN else None  # 0.16.0's (Application Support/smartshot): move_key()
+stuck = False  # OLD_KEY read too: move_key() left it there to be moved (0.16.0 still installed, or the move failed)
 NO_KEY = f"ยังไม่มี API key ของ Thunder: ใส่คีย์ที่ ตั้งค่า (เปิดจากไอคอนที่{TRAY}) หรือในไฟล์นี้ แล้วกด ตรวจใหม่"  # + KEY_FILE
 THUNDER_ERRORS = {  # error.code -> "what: what to do" for the card (branch on the code: Thunder's messages change)
     "MISSING_API_KEY": NO_KEY,
@@ -28,14 +33,16 @@ THUNDER_ERRORS = {  # error.code -> "what: what to do" for the card (branch on t
 }
 
 
-def thunder_key():  # thunder.key (KEY_FILE), else the THUNDER_API_KEY env var; read on every use, no restart
-    try:
-        with open(KEY_FILE, "rb") as f:
-            raw = f.read()
-    except OSError:
-        return os.environ.get("THUNDER_API_KEY", "").strip()
-    # a key file some editors save as UTF-16
-    return raw.decode("utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig", "replace").strip()
+def thunder_key():  # thunder.key (KEY_FILE; 0.16.0's while it's stuck), else the THUNDER_API_KEY env var;
+    for path in filter(None, (KEY_FILE, stuck and OLD_KEY)):  # read on every use, no restart
+        try:
+            with open(path, "rb") as f:
+                raw = f.read()
+        except OSError:
+            continue
+        # a key file some editors save as UTF-16
+        return raw.decode("utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig", "replace").strip()
+    return os.environ.get("THUNDER_API_KEY", "").strip()
 
 
 def store_key(k):  # into thunder.key, which every check reads -> False: not a key (Thunder's are printable ASCII)
@@ -45,6 +52,59 @@ def store_key(k):  # into thunder.key, which every check reads -> False: not a k
     with open(KEY_FILE, "w", encoding="ascii") as f:
         f.write(k)
     return True
+
+
+def move_key():  # once, at start (app.py): 0.16.0's thunder.key into DATA, then its folder if that's left empty.
+    global stuck  # anything failing: the old one stays where it is, and thunder_key() reads it (stuck)
+    if not OLD_KEY:
+        return
+    if installed():  # 0.16.0 still installed (this one run from the DMG, dist/): it needs it there
+        stuck = True
+        return
+    if os.path.isfile(OLD_KEY):
+        if os.path.lexists(KEY_FILE):  # a key here already: the old one put aside, never read or moved in again
+            try:  # (deleting this one then means no key, not the old one back)
+                os.replace(OLD_KEY, OLD_KEY + ".old")
+            except OSError:
+                pass
+            stuck = False
+            return
+        stuck = True
+        try:
+            os.makedirs(os.path.dirname(KEY_FILE), exist_ok=True)
+            try:
+                os.replace(OLD_KEY, KEY_FILE)  # the same file: its bytes and mode
+            except OSError as e:
+                if e.errno != errno.EXDEV or not copy_key(OLD_KEY, KEY_FILE):  # another volume: a copy, then the old goes
+                    return
+                stuck = False  # moved: a leftover old one isn't read any more
+                os.remove(OLD_KEY)
+        except OSError:
+            return
+        stuck = False
+    try:
+        os.rmdir(os.path.dirname(OLD_KEY))  # only if empty: anything else in it stays, and the folder with it
+    except OSError:
+        pass
+
+
+def copy_key(src, dst):  # src's bytes and mode in dst, on disk, before src goes -> done; a failed copy leaves no dst
+    part = dst + ".part"
+    try:
+        shutil.copy2(src, part)
+        with open(part, "rb") as f:
+            os.fsync(f.fileno())
+            with open(src, "rb") as g:
+                if f.read() != g.read():
+                    raise OSError("copy differs")
+        os.replace(part, dst)
+        return True
+    except OSError:
+        try:
+            os.remove(part)
+        except OSError:
+            pass
+        return False
 
 
 def verify_slip(kind, payload):
@@ -65,7 +125,7 @@ def verify_slip(kind, payload):
             url, body = f"{THUNDER}/verify/truewallet", {"base64": base64.b64encode(cv2.imencode(".png", q)[1]).decode()}
         req = urllib.request.Request(url, json.dumps({**body, "checkDuplicate": True}).encode(), {
             "Content-Type": "application/json",
-            "User-Agent": f"smartshot/{VERSION}"})  # Cloudflare there rejects urllib's default agent (error 1010)
+            "User-Agent": f"Snaplens/{VERSION}"})  # Cloudflare there rejects urllib's default agent (error 1010)
         req.add_unredirected_header("Authorization", f"Bearer {key}")  # urllib re-sends other headers on a redirect
         with urllib.request.urlopen(req, timeout=20) as r:
             res = json.load(r)

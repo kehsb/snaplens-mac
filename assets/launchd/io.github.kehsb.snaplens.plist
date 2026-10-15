@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Start at login: Snaplens.app/Contents/Library/LaunchAgents (snaplens.spec puts it there), registered by
+     system/autostart.py with SMAppService; Login Items shows it as the app, with its icon -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>io.github.kehsb.snaplens</string>
+	<key>BundleProgram</key>
+	<string>Contents/MacOS/Snaplens</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>Snaplens</string>
+		<string>--startup</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>ProcessType</key>
+	<string>Interactive</string>
+	<key>LimitLoadToSessionType</key>
+	<string>Aqua</string>
+	<key>AssociatedBundleIdentifiers</key>
+	<array>
+		<string>io.github.kehsb.snaplens</string>
+	</array>
+</dict>
+</plist>

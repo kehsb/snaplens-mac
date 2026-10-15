@@ -16,7 +16,8 @@
 > [!IMPORTANT]
 > This is the **ThunderAPI** branch: Snaplens with Thai bank-slip verification through Thunder API. Its build is
 > release [v0.16.0](https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0). From 0.17.0, the [main branch](https://github.com/kehsb/snaplens-mac) is a screen capture tool without slip
-> verification.
+> verification. Building this branch gives 0.16.1: the same app under its new names (`snaplens`, as on main since
+> 0.17.1). The v0.16.0 download still uses the old internal name, `smartshot`.
 
 <p align="center">
   <a href="https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0"><img src="https://img.shields.io/badge/release-v0.16.0-blue" alt="Release v0.16.0"></a>
@@ -45,9 +46,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/capture.png" width="820" alt="The Snaplens capture overlay on macOS. A bank-transfer slip is selected under a Liquid Glass toolbar, and a verification card says the bank confirmed a 1,500.00 baht transfer, with a field-by-field comparison table and Copy and Save Receipt buttons.">
+  <img src="docs/images/capture.png" width="820" alt="Snaplens on a macOS desktop. A sample transfer slip, watermarked as a sample, is selected in a chat window under the Liquid Glass toolbar; the verification card beside it says the bank confirmed a 1,500.00 baht transfer, with every field in the image ticked as matching, and Copy and Save Receipt buttons.">
   <br>
-  <sub>Checking a transfer slip: the bank confirms it and each field is compared with the image. All screenshots use mock data.</sub>
+  <sub>Checking a transfer slip: the bank confirms it and each field is compared with the image. The slip, names and accounts are made up, and the bank's answer in this shot is simulated.</sub>
 </p>
 
 > [!NOTE]
@@ -164,9 +165,9 @@ select an area · click a highlighted box · mouse wheel to grow or shrink · Es
 ### Translating
 
 <p align="center">
-  <img src="docs/images/translate.png" width="720" alt="A Chinese line read by OCR and replaced in place by its Thai translation. The pinyin line and an existing Thai line are left untouched.">
+  <img src="docs/images/translate.png" width="640" alt="Close-up of a selection on a Chinese product page: the title, the warranty line and four feature lines are each replaced in place by their Thai translations, on boxes that match the page background. The prices are left as they are.">
   <br>
-  <sub>A Chinese line translated to Thai in place. The pinyin and Thai lines are skipped on purpose.</sub>
+  <sub>Each line keeps its place and size; numbers and prices stay as they are.</sub>
 </p>
 
 - **Selecting lines translates them.** Click a line to select it, **⌘-click** to add or remove one, **⌘-drag** or a drag
@@ -298,7 +299,7 @@ The shortcut is bound to physical key positions, so **⌃⌥S** works while the 
 ## Settings
 
 <p align="center">
-  <img src="docs/images/settings.png" width="600" alt="The Snaplens settings window in dark mode, styled like System Settings. It shows the Control-Option-S shortcut, reading mode set to Auto, no Thunder API key yet, and the Open at login switch turned on.">
+  <img src="docs/images/settings.png" width="600" alt="The Snaplens settings window in dark mode on the macOS Sonoma wallpaper, styled like System Settings. It shows the Control-Option-S shortcut, reading mode set to Auto, a Thunder API key saved (shown masked), and the Open at login switch turned on.">
 </p>
 
 The menu bar menu has **แคปหน้าจอ** (Capture screen), **ภาษาที่อ่าน** (Reading language), **ตั้งค่า…** (Settings, ⌘,)
@@ -315,8 +316,15 @@ the version, the current shortcut, and whether the OCR models are ready and slip
   Esc cancels. It must use ⌃ or ⌘ with another key, or be an F-key, alone or with other modifiers. ⌘ cannot be the
   only modifier, because it clashes with app menus, and Tab and ⌘/⌃-Space are not allowed. If the system or another app already uses the
   combination, Snaplens silently falls back to ⌃⌥S.
-- **Open at login** writes a user LaunchAgent that starts the app with `--startup` (the Ready notification is then
-  skipped). If you move the app, turn the switch off and on again.
+- **Open at login** registers the login item built into the app with macOS, so it is listed as **Snaplens** in
+  **System Settings > General > Login Items & Extensions**, where it can also be switched off. At login it starts the
+  app with `--startup` (the Ready notification is then skipped). If macOS refuses that item, Snaplens falls back to a
+  plain Open at Login entry, which starts it as if opened by hand, Ready notification included.
+- **When macOS needs your approval**, or Snaplens is switched off in System Settings, the switch stays on and the line
+  under it turns red: *อนุญาต Snaplens ใน การตั้งค่าระบบ > ทั่วไป > รายการเข้าสู่ระบบ* (allow Snaplens in System
+  Settings > General > Login Items). If approval is still needed when you turn the switch on, Snaplens opens that page.
+- **From source**, the switch is greyed out and reads *ใช้ได้เมื่อเปิดจากแอปที่ติดตั้ง* (works when opened from the
+  installed app).
 - **Only the shortcut is remembered** between launches. The reading mode resets to Auto, the target language to Thai,
   and tool sizes to their defaults (the ink colour already resets with every capture).
 - **Closing Settings** only hides the window. The first time you close it after each launch, Snaplens posts a notice
@@ -348,19 +356,26 @@ There is no telemetry, analytics, crash reporting or update check. Translation e
 
 ### What is stored
 
-`smartshot` is the app's internal name, which is why these paths use it.
-
 | Data | Location |
 |---|---|
-| Thunder API key (app) | `~/Library/Application Support/smartshot/thunder.key`: a plain text file, **not the Keychain**, kept when you reinstall |
+| Thunder API key (app) | `~/Library/Application Support/Snaplens/thunder.key`: a plain text file, **not the Keychain**, kept when you reinstall |
 | Thunder API key (from source) | `thunder.key` in the repository root (git-ignored), else the `THUNDER_API_KEY` environment variable |
-| Preferences (the shortcut only) | `~/Library/Preferences/com.smartshot.smartshot.plist` |
-| Login item (when enabled) | `~/Library/LaunchAgents/smartshot.plist` |
+| Preferences (the shortcut, and which build registered the login item) | `~/Library/Preferences/io.github.kehsb.snaplens.plist` |
+| Login item (when enabled) | Registered with macOS and listed as Snaplens in **System Settings > General > Login Items & Extensions**. Its launchd agent stays inside the app: `Snaplens.app/Contents/Library/LaunchAgents/io.github.kehsb.snaplens.plist` |
 | Images and receipts | Only where you save them |
 
 > [!TIP]
 > The key file is created with default permissions (0644), but it sits inside `~/Library`, which only your account can
-> open. To lock the file itself down too: `chmod 600 ~/Library/Application\ Support/smartshot/thunder.key`
+> open. To lock the file itself down too: `chmod 600 ~/Library/Application\ Support/Snaplens/thunder.key`
+
+**Upgrading from 0.16.0 or earlier**, which used the internal name `smartshot`. The first time 0.16.1 starts, it copies
+your shortcut out of `~/Library/Preferences/com.smartshot.smartshot.plist`. Once the old app is no longer installed in
+`/Applications` or `~/Applications`, it also deletes that file, and moves your Thunder key from
+`~/Library/Application Support/smartshot/thunder.key` to `~/Library/Application Support/Snaplens/`, keeping its
+permissions, then deletes the old folder if nothing else is left in it. If a key is there already, the old one is
+renamed `thunder.key.old` in the old folder and no longer read. If the key cannot be moved, it stays where it was and
+Snaplens keeps reading it from there. Once 0.16.1 has replaced the old app in the same place (for example
+`/Applications`), it also replaces the old login item, `~/Library/LaunchAgents/smartshot.plist`, with the new one.
 
 ## FAQ and troubleshooting
 
@@ -402,7 +417,9 @@ first 5 minutes shows *สลิปธนาคารกรุงเทพยั
 The comparison is based on OCR, so ✗ can be a misread as well as an edited image. Check that row yourself.
 
 **Open at login stopped working.**
-The login item points at the app's location. If you moved the app, turn **เปิดเมื่อเข้าสู่ระบบ** off and on again.
+Look at the line under **เปิดเมื่อเข้าสู่ระบบ** in Settings. If it is red, Snaplens is switched off or not yet
+allowed in **System Settings > General > Login Items & Extensions**: switch it on there. If you moved the app, turn
+**เปิดเมื่อเข้าสู่ระบบ** off and on again.
 
 **Does it run on Intel Macs or macOS 15?**
 No. The release supports Apple Silicon and macOS 26 only.
@@ -432,14 +449,20 @@ The app bundles its own Python runtime, Qt, OpenCV, ONNX Runtime and the OCR mod
 
 ## Uninstall
 
-1. Turn off **เปิดเมื่อเข้าสู่ระบบ** (Open at login) in Settings, then quit Snaplens (**ออกจาก Snaplens**, ⌘Q).
-2. Delete the app and its data, and reset the Screen Recording permission:
+1. Turn off **เปิดเมื่อเข้าสู่ระบบ** (Open at login) in Settings before you delete the app (if the app is already
+   gone, switch Snaplens off in **System Settings > General > Login Items & Extensions** instead), then quit Snaplens
+   (**ออกจาก Snaplens**, ⌘Q).
+2. Delete the app and its data (including the Thunder key), and reset the Screen Recording permission:
 
 ```bash
-rm -rf /Applications/Snaplens.app ~/Library/Application\ Support/smartshot
-rm -f ~/Library/Preferences/com.smartshot.smartshot.plist ~/Library/LaunchAgents/smartshot.plist
+rm -rf /Applications/Snaplens.app ~/Library/Application\ Support/Snaplens
+rm -f ~/Library/Preferences/io.github.kehsb.snaplens.plist
 tccutil reset ScreenCapture io.github.kehsb.snaplens
 ```
+
+Older versions may have left files of their own. If `~/Library/Preferences/com.smartshot.smartshot.plist`,
+`~/Library/LaunchAgents/smartshot.plist` or `~/Library/Application Support/smartshot` (0.16.0's Thunder key) is still
+there, left by the versions that used the internal name `smartshot`, delete it too.
 
 ## Build from source
 
@@ -447,7 +470,7 @@ You need an Apple Silicon Mac and Python 3.13 (`brew install python@3.13`). The 
 and PySide6's binaries target macOS 15; only macOS 26 has been tested.
 
 ```bash
-git clone https://github.com/kehsb/snaplens-mac.git
+git clone -b ThunderAPI https://github.com/kehsb/snaplens-mac.git
 cd snaplens-mac
 python3.13 -m venv .venv
 .venv/bin/pip install -r requirements.txt
@@ -458,7 +481,12 @@ python3.13 -m venv .venv
 - From source, the **Screen Recording permission goes to the terminal or IDE** that runs Python, not to Snaplens.
 - Notices appear as the in-app panel instead of Notification Center.
 - The Thunder key is read from `thunder.key` in the repository root, or from `THUNDER_API_KEY`.
-- `./dev.sh` restarts the app whenever `app.py` or anything in `smartshot/` changes.
+- `./dev.sh` restarts the app whenever `app.py` or anything in `snaplens/` changes.
+- **Open at login** works only in the built app; from source its switch is greyed out. If you turned it on while
+  running a version that used the internal name `smartshot` (up to 0.16.0 on this branch, 0.17.0 on main) from
+  source, delete `~/Library/LaunchAgents/smartshot.plist`: nothing removes it for you, and it keeps starting `app.py`
+  at login.
+- While an old `smartshot` copy is running, `python app.py` hands over to it instead of starting a second one.
 
 ### Build the app and DMG
 
@@ -473,27 +501,33 @@ python3.13 -m venv .venv
 
 In order, the script:
 
-1. Reads `VERSION` from `smartshot/config.py`.
+1. Reads `VERSION` from `snaplens/config.py` (0.16.1 on this branch).
 2. Creates the signing certificate if it is missing (openssl, RSA-2048, valid for 3650 days). A stable identity keeps
    the Screen Recording permission across rebuilds.
 3. Downloads the OCR models so they are bundled.
-4. Builds `dist/Snaplens.app` with PyInstaller from `smartshot.spec`: a one-folder app (a one-file app would unpack
+4. Builds `dist/Snaplens.app` with PyInstaller from `snaplens.spec`: a one-folder app (a one-file app would unpack
    the whole bundle, about 370 MB with the models, to a temporary folder on every start), without unused models, other
-   inference engines, QML, PDF, WebEngine or Qt translations.
+   inference engines, QML, PDF, WebEngine or Qt translations. It also copies the login item's launchd agent,
+   `assets/launchd/io.github.kehsb.snaplens.plist`, into `Contents/Library/LaunchAgents`.
 5. Signs it with `codesign --force --deep`.
-6. Creates `installer/Snaplens-<version>.dmg` (UDZO, with an `Applications` link).
+6. Creates `installer/Snaplens-<version>.dmg` with dmgbuild, using the settings in `dmg.py`: UDZO, the app icon as the
+   volume icon, and a Finder window that shows the app, an arrow and an `Applications` link on the background picture
+   in `assets/dmg/`.
 7. Installs the app to `/Applications/Snaplens.app` with `ditto`.
 
-The bundle id is `io.github.kehsb.snaplens`, the executable is `Snaplens.app/Contents/MacOS/smartshot`, and
-`LSUIElement` keeps it out of the Dock.
+The bundle id is `io.github.kehsb.snaplens`, the executable is `Snaplens.app/Contents/MacOS/Snaplens` (in the
+v0.16.0 download it is still `MacOS/smartshot`), and `LSUIElement` keeps it out of the Dock. PyInstaller and dmgbuild
+are pinned in `requirements.txt`, so the setup above already installed them. The DMG background is drawn by
+`assets/dmg/background.py`: after changing it, run `.venv/bin/python assets/dmg/background.py` to redraw
+`background.png` and `background@2x.png`.
 
 ### Project structure
 
 ```text
 snaplens-mac/
 ├── app.py                  # Entry point: single instance, no Dock icon, theme, starts the app
-├── smartshot/              # The app package (internal name "smartshot")
-│   ├── config.py           # Version, default shortcut, languages, fonts, OCR thresholds
+├── snaplens/               # The app package
+│   ├── config.py           # Version, bundle id, default shortcut, languages, fonts, OCR thresholds
 │   ├── task.py             # Task: runs a function off the UI thread (QThread)
 │   ├── ocr/
 │   │   ├── engine.py       # RapidOCR: shared PP-OCRv6 detector, PP-OCRv5 Chinese/Thai recognizers
@@ -502,12 +536,13 @@ snaplens-mac/
 │   │   ├── scan.py         # Finds and decodes QR codes; detects panels and slips in a capture
 │   │   └── promptpay.py    # EMVCo, PromptPay, bill and slip QR parsing; CRC; Thai formatting
 │   ├── slip/
-│   │   ├── thunder.py      # Thunder key storage, the verify call, mapping the answer to fields
+│   │   ├── thunder.py      # Thunder key storage (and moving 0.16.0's over), the verify call, mapping the answer to fields
 │   │   └── compare.py      # Bank fields vs the OCR'd image: ✓ / ✗ / ?
 │   ├── system/
 │   │   ├── mac.py          # AppKit/Quartz/Carbon: display capture, overlay level, permission, shortcut
 │   │   ├── hotkey.py       # Shortcut names and symbols, and which combinations are allowed
-│   │   └── autostart.py    # Login item via a LaunchAgent plist
+│   │   ├── autostart.py    # Login item: the app's launchd agent, registered with SMAppService
+│   │   └── prefs.py        # Settings store (QSettings), and moving settings over from older versions
 │   └── ui/
 │       ├── main.py         # App controller: menu bar, shortcut, settings state, capture lifecycle
 │       ├── menubar.py      # Status item and its native menu
@@ -520,9 +555,12 @@ snaplens-mac/
 │       ├── notify.py       # Notification Center notices, or the in-app panel
 │       └── assets.py       # Fonts, line-icon glyphs, app icon
 ├── assets/icons/           # App and menu bar icons
+├── assets/dmg/             # DMG window background, and background.py, which draws it
+├── assets/launchd/         # The login item's launchd agent, copied into the app
 ├── docs/images/            # README screenshots
 ├── testset/                # Sample image
-├── smartshot.spec          # PyInstaller recipe and bundle metadata
+├── snaplens.spec           # PyInstaller recipe and bundle metadata
+├── dmg.py                  # dmgbuild settings: DMG window, icon positions, background
 ├── build.sh                # Build, sign, DMG, install
 ├── dev.sh                  # Auto-restart dev runner
 └── requirements.txt        # Pinned dependencies
@@ -535,7 +573,8 @@ snaplens-mac/
 - **AppKit through PyObjC** draws everything around it: the menu bar menu, the overlay toolbar, hint bar, popovers and
   menus, the QR and slip card, the Settings window and Notification Center notices. Liquid Glass (`NSGlassEffectView`)
   needs macOS 26; the `NSVisualEffectView` fallback for older systems is untested.
-- **Quartz** captures each display at full resolution, and **Carbon** provides the global shortcut.
+- **Quartz** captures each display at full resolution, **Carbon** provides the global shortcut, and
+  **ServiceManagement** (`SMAppService`) registers the login item.
 - **OCR:** the PP-OCRv6 small detector finds lines once, and each line is recognized with the PP-OCRv5 mobile Chinese
   and/or Thai model. Captures under 400 px on a side are upscaled 2×, and readings scoring below 0.5 are dropped.
 
@@ -548,10 +587,10 @@ Issues and pull requests are welcome.
   references.
 - **Pull requests:** keep each to one topic. There is no test suite or CI yet, so describe how you tested by hand,
   including the macOS version. For larger changes, such as localization or a new capture mode, open an issue first.
-- **Code:** put code in the domain packages under `smartshot/` (`ocr`, `qr`, `slip`, `system`, `ui`). Build native UI
-  with AppKit through PyObjC, reusing `smartshot/ui/native.py`; Qt paints the capture canvas. Keep slow work off the
-  UI thread with `smartshot.task.Task`. User-facing strings are Thai, so match the existing wording. `pyflakes` is in
-  `requirements.txt`: run `.venv/bin/pyflakes app.py smartshot` before pushing.
+- **Code:** put code in the domain packages under `snaplens/` (`ocr`, `qr`, `slip`, `system`, `ui`). Build native UI
+  with AppKit through PyObjC, reusing `snaplens/ui/native.py`; Qt paints the capture canvas. Keep slow work off the
+  UI thread with `snaplens.task.Task`. User-facing strings are Thai, so match the existing wording. `pyflakes` is in
+  `requirements.txt`: run `.venv/bin/pyflakes app.py snaplens` before pushing.
 - **Never commit** a `thunder.key` or real slip images. `thunder.key` and `testset/slips/` are git-ignored.
 
 ## Acknowledgements
@@ -569,6 +608,7 @@ Snaplens is built on these open-source projects:
 | [deep-translator](https://github.com/nidhaloff/deep-translator) | MIT | Google Translate and MyMemory clients |
 | [NumPy](https://numpy.org) | BSD-3-Clause and others | Arrays |
 | [PyInstaller](https://pyinstaller.org) | GPL-2.0-or-later with the bootloader exception | Building the app bundle |
+| [dmgbuild](https://github.com/dmgbuild/dmgbuild) (with ds_store and mac_alias) | MIT | Building the DMG |
 | [Python](https://www.python.org) | PSF License | Runtime, bundled in the app |
 
 Also bundled through dependencies, each under its own licence: shapely (BSD-3-Clause) with GEOS (LGPL-2.1),

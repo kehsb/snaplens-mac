@@ -7,7 +7,7 @@ from PySide6.QtCore import QByteArray
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QIcon
 from PySide6.QtSvg import QSvgRenderer
 
-from smartshot.config import ASSETS, FONTS
+from snaplens.config import ASSETS, FONTS
 
 
 def font(px, bold=False):  # Thai needs a font with Thai glyphs, else tofu boxes

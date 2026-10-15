@@ -2,8 +2,8 @@
 import difflib
 import re
 
-from smartshot.config import THAI
-from smartshot.qr.promptpay import TH_MONTHS
+from snaplens.config import THAI
+from snaplens.qr.promptpay import TH_MONTHS
 
 
 # --- reading the image's side of a slip, for compare()
