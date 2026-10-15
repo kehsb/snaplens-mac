@@ -563,15 +563,13 @@ Snaplens is built on these open-source projects:
 | [PyObjC](https://github.com/ronaldoussoren/pyobjc) | MIT | AppKit, Quartz and Notification Center from Python |
 | [deep-translator](https://github.com/nidhaloff/deep-translator) | MIT | Google Translate and MyMemory clients |
 | [NumPy](https://numpy.org) | BSD-3-Clause and others | Arrays |
-| [PySide6-Fluent-Widgets](https://pypi.org/project/PySide6-Fluent-Widgets/) | GPL-3.0 | Light and dark theme detection only |
-| [PySideSix-Frameless-Window](https://pypi.org/project/PySideSix-Frameless-Window/) | LGPL-3.0 | Dependency of the above |
 | [PyInstaller](https://pyinstaller.org) | GPL-2.0-or-later with the bootloader exception | Building the app bundle |
 | [Python](https://www.python.org) | PSF License | Runtime, bundled in the app |
 
 Also bundled through dependencies, each under its own licence: shapely (BSD-3-Clause) with GEOS (LGPL-2.1),
 pyclipper, omegaconf, antlr4-python3-runtime, PyYAML, Pillow, requests, urllib3, idna, charset-normalizer,
 certifi (MPL-2.0), beautifulsoup4, soupsieve, tqdm (MPL-2.0 and MIT), colorlog, colorama, packaging,
-typing_extensions, setuptools and darkdetect.
+typing_extensions and setuptools.
 
 External services: Google Translate (unofficial web endpoint), [MyMemory](https://mymemory.translated.net) by
 Translated, and [Thunder](https://document.thunder.in.th/th/v2/) for slip verification under your own account.
@@ -583,8 +581,7 @@ The Snaplens **source code** is released under the [MIT License](LICENSE). Copyr
 The **prebuilt app (DMG)** also contains third-party components under their own licences, which the MIT License does
 not cover, including:
 
-- **GPL-3.0:** PySide6-Fluent-Widgets
-- **LGPL-3.0:** PySide6 / Qt and PySideSix-Frameless-Window
+- **LGPL-3.0:** PySide6 / Qt
 - **LGPL-2.1:** GEOS, shipped with shapely
 - **GPL-3.0-or-later:** FFmpeg as shipped inside the opencv-python wheel (`libavcodec`, `libavformat`, `libavutil`,
   `libswscale` and the other FFmpeg libraries, built with `--enable-gpl --enable-version3`), together with the GPL

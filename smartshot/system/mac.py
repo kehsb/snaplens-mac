@@ -22,6 +22,11 @@ def let_go():  # nothing of ours left on screen: the app that was in front befor
     AppKit.NSApp.hide_(None)
 
 
+def dark():  # the system's appearance (Dark, or Auto after dark) is dark: the app doesn't set one of its own
+    names = [AppKit.NSAppearanceNameAqua, AppKit.NSAppearanceNameDarkAqua]
+    return AppKit.NSApp.effectiveAppearance().bestMatchFromAppearancesWithNames_(names) == names[1]
+
+
 def reduce_transparency():  # Accessibility > Display > Reduce transparency: glass drawn opaque
     return bool(AppKit.NSWorkspace.sharedWorkspace().accessibilityDisplayShouldReduceTransparency())
 

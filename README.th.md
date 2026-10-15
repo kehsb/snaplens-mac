@@ -472,12 +472,10 @@ Snaplens สร้างขึ้นบนโปรเจกต์โอเพ�
 | [PyObjC](https://github.com/ronaldoussoren/pyobjc) | MIT | เรียก AppKit, Quartz และ Notification Center จาก Python |
 | [deep-translator](https://github.com/nidhaloff/deep-translator) | MIT | ไคลเอนต์ Google Translate และ MyMemory |
 | [NumPy](https://numpy.org) | BSD-3-Clause และอื่นๆ | อาร์เรย์ |
-| [PySide6-Fluent-Widgets](https://pypi.org/project/PySide6-Fluent-Widgets/) | GPL-3.0 | ใช้เฉพาะตรวจว่าระบบใช้ธีมสว่างหรือมืด |
-| [PySideSix-Frameless-Window](https://pypi.org/project/PySideSix-Frameless-Window/) | LGPL-3.0 | dependency ของแพ็กเกจด้านบน |
 | [PyInstaller](https://pyinstaller.org) | GPL-2.0-or-later พร้อมข้อยกเว้นสำหรับ bootloader | บิลด์ app bundle |
 | [Python](https://www.python.org) | PSF License | runtime ที่รวมมากับแอป |
 
-ไลบรารีที่ติดมากับ dependency ด้วย ซึ่งแต่ละตัวใช้สัญญาอนุญาตของตัวเอง ได้แก่ shapely (BSD-3-Clause) พร้อม GEOS (LGPL-2.1), pyclipper, omegaconf, antlr4-python3-runtime, PyYAML, Pillow, requests, urllib3, idna, charset-normalizer, certifi (MPL-2.0), beautifulsoup4, soupsieve, tqdm (MPL-2.0 และ MIT), colorlog, colorama, packaging, typing_extensions, setuptools และ darkdetect
+ไลบรารีที่ติดมากับ dependency ด้วย ซึ่งแต่ละตัวใช้สัญญาอนุญาตของตัวเอง ได้แก่ shapely (BSD-3-Clause) พร้อม GEOS (LGPL-2.1), pyclipper, omegaconf, antlr4-python3-runtime, PyYAML, Pillow, requests, urllib3, idna, charset-normalizer, certifi (MPL-2.0), beautifulsoup4, soupsieve, tqdm (MPL-2.0 และ MIT), colorlog, colorama, packaging, typing_extensions และ setuptools
 
 บริการภายนอก: Google Translate (endpoint เว็บแบบไม่เป็นทางการ), [MyMemory](https://mymemory.translated.net) ของ Translated และ [Thunder](https://document.thunder.in.th/th/v2/) สำหรับตรวจสลิปภายใต้บัญชีของคุณเอง
 
@@ -487,8 +485,7 @@ Snaplens สร้างขึ้นบนโปรเจกต์โอเพ�
 
 **แอปสำเร็จรูป (DMG)** มีคอมโพเนนต์ของบุคคลที่สามที่ใช้สัญญาอนุญาตของตัวเองรวมอยู่ด้วย ซึ่ง MIT License ไม่ครอบคลุม ได้แก่
 
-- **GPL-3.0:** PySide6-Fluent-Widgets
-- **LGPL-3.0:** PySide6 / Qt และ PySideSix-Frameless-Window
+- **LGPL-3.0:** PySide6 / Qt
 - **LGPL-2.1:** GEOS ที่มากับ shapely
 - **GPL-3.0-or-later:** FFmpeg ที่มากับ wheel ของ opencv-python (`libavcodec`, `libavformat`, `libavutil`, `libswscale` และไลบรารีอื่นของ FFmpeg ซึ่งบิลด์ด้วย `--enable-gpl --enable-version3`) รวมถึงไลบรารี GPL ที่ FFmpeg ลิงก์อยู่ ได้แก่ `libx264`, `libx265`, `libpostproc`, `librubberband` และ `libvidstab`
 

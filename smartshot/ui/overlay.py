@@ -8,7 +8,6 @@ from PySide6.QtCore import QLineF, QPoint, QPointF, QRect, QRectF, QSizeF, QStan
 from PySide6.QtGui import (QBrush, QColor, QCursor, QFont, QFontMetrics, QGuiApplication, QImage, QKeySequence,
                            QPainter, QPainterPath, QPen, QPixmap, QPolygonF, QRegion, QTransform)
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QWidget
-from qfluentwidgets import isDarkTheme
 
 from smartshot.config import CTRL, LANGS, VERSION
 from smartshot.ocr.engine import ocr
@@ -502,7 +501,7 @@ class Overlay(QWidget):
         screen px, and when it was checked; made before the file dialog, whose event loop may rebuild the card when
         an answer lands."""
         L, k = self.layer, self.k
-        pm = QImage.fromData(self.card.receipt_png(k, NSAppearanceNameDarkAqua if isDarkTheme() else NSAppearanceNameAqua))
+        pm = QImage.fromData(self.card.receipt_png(k, NSAppearanceNameDarkAqua if mac.dark() else NSAppearanceNameAqua))
         slip, (bg, edge) = L.img.copy(L.crop), chrome()
         when = max(s[2] for s in self.slips.values() if s)
         note = f"ตรวจเมื่อ {when.day} {TH_MONTHS[when.month - 1]} {when.year + 543} {when:%H:%M:%S} น. · Thunder API · Snaplens v{VERSION}"

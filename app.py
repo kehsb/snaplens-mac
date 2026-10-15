@@ -6,7 +6,6 @@ import sys
 
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import QApplication
-from qfluentwidgets import Theme, setTheme
 
 from smartshot.system import mac
 from smartshot.ui.assets import setup_app
@@ -24,7 +23,6 @@ if __name__ == "__main__":
     mac.accessory()  # no Dock icon: it lives in the menu bar
     install_edit_menu()  # ⌘X ⌘C ⌘V ⌘A in native text fields: the card's key box, the settings' key sheet
     setup_app(app)
-    setTheme(Theme.AUTO)
     m = Main()  # no window: it starts in the menu bar
     door = QLocalServer(m)
 

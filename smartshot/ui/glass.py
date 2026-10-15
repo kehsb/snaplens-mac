@@ -6,13 +6,12 @@ import cv2
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen, QPixmap
-from qfluentwidgets import isDarkTheme
 
 from smartshot.system import mac
 
 
 def chrome():  # background, border of glass drawn opaque (receipts; Reduce transparency on)
-    return ("#1C1F26", "#333844") if isDarkTheme() else ("#F4F5F8", "#D5D8DE")
+    return ("#1C1F26", "#333844") if mac.dark() else ("#F4F5F8", "#D5D8DE")
 
 
 def qimage(bgr):  # BGR ndarray -> QImage that owns its pixels
@@ -32,11 +31,11 @@ def rgba(r, g, b, a=1.0):
 
 
 def glass(kind):  # -> fill, edge, lit edge (QColor)
-    return [rgba(*c) for c in (GLASS if isDarkTheme() else GLASS_LIGHT)[kind]]
+    return [rgba(*c) for c in (GLASS if mac.dark() else GLASS_LIGHT)[kind]]
 
 
 def ink(a=1.0):  # text and icons on glass: white on dark, #1C1F26 on light; a: secondary .68, faint .5
-    return rgba(255, 255, 255, a) if isDarkTheme() else rgba(28, 31, 38, a)
+    return rgba(255, 255, 255, a) if mac.dark() else rgba(28, 31, 38, a)
 
 
 def clear():  # glass shows what's behind it, unless Accessibility > Display > Reduce transparency is on
