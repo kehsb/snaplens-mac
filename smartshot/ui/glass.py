@@ -1,5 +1,5 @@
 """The canvas's own glass, painted by Qt (design/liquid-glass/HANDOFF.md): the size tag and the magnifier's label
-over the capture frosted, their shadows, and the receipt's opaque ground. The chrome is native (native.glass)."""
+over the capture frosted, and their shadows. The chrome is native (native.glass)."""
 from functools import lru_cache
 
 import cv2
@@ -10,7 +10,7 @@ from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen, QPixmap
 from smartshot.system import mac
 
 
-def chrome():  # background, border of glass drawn opaque (receipts; Reduce transparency on)
+def chrome():  # background, border of glass drawn opaque (Reduce transparency on)
     return ("#1C1F26", "#333844") if mac.dark() else ("#F4F5F8", "#D5D8DE")
 
 

@@ -1,6 +1,6 @@
 """Snaplens for macOS (internally still smartshot: its settings, login item and single-instance name): capture region -> OCR (zh/en/th) -> translate to Thai, painted over the capture in place.
-QR codes in the capture are read and explained; bank slips among them are checked with Thunder.
-This file starts it; the code is in smartshot/, by domain: ocr/, qr/, slip/, ui/, system/ (config.py: VERSION and paths)."""
+QR codes in the capture are read and explained.
+This file starts it; the code is in smartshot/, by domain: ocr/, qr/, ui/, system/ (config.py: VERSION and paths)."""
 import os
 import sys
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         os._exit(0)
     app.setQuitOnLastWindowClosed(False)
     mac.accessory()  # no Dock icon: it lives in the menu bar
-    install_edit_menu()  # ⌘X ⌘C ⌘V ⌘A in native text fields: the card's key box, the settings' key sheet
+    install_edit_menu()  # ⌘C ⌘A in native text: the QR card's selectable labels
     setup_app(app)
     m = Main()  # no window: it starts in the menu bar
     door = QLocalServer(m)

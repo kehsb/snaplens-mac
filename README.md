@@ -9,8 +9,8 @@
 <p align="center">
   <b>Capture part of your screen, read it, and see the translation where the text was.</b>
   <br>
-  A macOS menu bar app that reads Chinese, English and Thai on your Mac, translates in place,
-  decodes QR codes and checks Thai bank-transfer slips.
+  A macOS menu bar app for screen captures: it reads Chinese, English and Thai on your Mac, translates in place,
+  lets you mark up the capture and explains the QR codes in it.
 </p>
 
 <p align="center">
@@ -22,9 +22,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/kehsb/snaplens-mac/releases/download/v0.16.0/Snaplens-0.16.0.dmg"><img src="https://img.shields.io/badge/Download%20for%20Mac-Snaplens%200.16.0-0A84FF?style=for-the-badge&logo=apple&logoColor=white" alt="Download Snaplens 0.16.0 for Mac"></a>
+  <a href="https://github.com/kehsb/snaplens-mac/releases/download/v0.17.0/Snaplens-0.17.0.dmg"><img src="https://img.shields.io/badge/Download%20for%20Mac-Snaplens%200.17.0-0A84FF?style=for-the-badge&logo=apple&logoColor=white" alt="Download Snaplens 0.17.0 for Mac"></a>
   <br>
-  <sub>Snaplens-0.16.0.dmg · 173 MB · macOS 26 Tahoe · Apple Silicon ·
+  <sub>Snaplens-0.17.0.dmg · about 170 MB · macOS 26 Tahoe · Apple Silicon ·
   <a href="https://github.com/kehsb/snaplens-mac/releases/latest">Latest release</a> ·
   <a href="#install">Install guide</a></sub>
 </p>
@@ -39,15 +39,15 @@
   <a href="#build-from-source">Build from source</a>
 </p>
 
-<p align="center">
-  <img src="docs/images/capture.png" width="820" alt="The Snaplens capture overlay on macOS. A bank-transfer slip is selected under a Liquid Glass toolbar, and a verification card says the bank confirmed a 1,500.00 baht transfer, with a field-by-field comparison table and Copy and Save Receipt buttons.">
-  <br>
-  <sub>Checking a transfer slip: the bank confirms it and each field is compared with the image. All screenshots use mock data.</sub>
-</p>
-
 > [!NOTE]
 > **The Snaplens interface is in Thai.** This README is in English; there is also a [Thai version](README.th.md).
 > Wherever it names an on-screen label, it gives the Thai text and its English meaning, so you can find each control.
+
+<p align="center">
+  <img src="docs/images/capture.png" width="820" alt="The Snaplens capture overlay on macOS. A web page is selected under a Liquid Glass toolbar; its QR code is boxed in blue, and a card beside the selection says it is a link to github.com/kehsb/snaplens-mac, with Copy and Open link buttons.">
+  <br>
+  <sub>A QR code in the selection, read: the card says what it holds and opens the link. All screenshots use mock data.</sub>
+</p>
 
 ## Features
 
@@ -58,18 +58,22 @@
   which runs PaddleOCR (PP-OCR) models on ONNX Runtime. Screenshots are never uploaded.
 - **Every display, one shortcut.** **⌃⌥S** freezes each display at full Retina resolution, above the menu bar and
   Dock, on any Space and over full-screen apps.
-- **Snipaste-style panel picking.** Snaplens finds boxes and slips in the pixels. Hover and click to select one,
-  scroll to step out to a larger panel, or drag your own region. An 8× magnifier shows pixel coordinates and colour.
+- **Snipaste-style panel picking.** Snaplens finds boxes in the pixels. Hover and click to select one, scroll to step
+  out to a larger panel, or drag your own region. An 8× magnifier shows pixel coordinates and colour.
 - **Markup.** Pen, highlighter, rectangle, arrow, text and mosaic, in five colours and four sizes, with undo. Copy the
   result (**⌘C**) or save it as PNG or JPEG (**⌘S**).
-- **Thai payment QR codes.** Decodes PromptPay, Thai QR bill payments, EMVCo merchant codes, bank-slip mini-QRs and
-  TrueMoney slips, and warns when a slip or payment QR fails its CRC check.
-- **Slip verification (optional).** With your own [Thunder](https://document.thunder.in.th/th/v2/) API key, the bank
-  confirms or denies a transfer, and Snaplens compares each field with what the slip image shows.
+- **QR codes.** Every QR code in the selection is decoded and boxed, and a card beside the selection says what each
+  one holds: links, text, PromptPay, Thai QR bill payments, EMVCo merchant codes and the mini-QRs on bank and
+  TrueMoney slips. Copy what the card says, or open a web link in your browser. Payment and slip codes that fail their
+  CRC check get a warning.
 - **Native macOS UI.** A Liquid Glass capture toolbar, a Settings window styled like System Settings, Notification
   Center notices and no Dock icon. The global shortcut uses Carbon, so no Accessibility or Input Monitoring
   permission is needed.
 - **No telemetry.** No analytics, no crash reporting and no update checks.
+
+Looking for slip verification? Checking Thai bank slips with the Thunder API is no longer part of Snaplens. It lives on
+the [`ThunderAPI`](https://github.com/kehsb/snaplens-mac/tree/ThunderAPI) branch, and its last build is
+[Snaplens 0.16.0](https://github.com/kehsb/snaplens-mac/releases/tag/v0.16.0).
 
 ## Install
 
@@ -80,9 +84,8 @@
 | **Mac** | Apple Silicon (arm64) only | Apple Silicon (the pinned wheels are arm64) |
 | **macOS** | **macOS 26 Tahoe** (tested on 26.7.1) | 14 or later per the wheel tags (PySide6's Qt bindings target 15). Only 26 has been tested. |
 | **Python** | Bundled | 3.13 (`brew install python@3.13`) |
-| **Disk** | 173 MB download (GitHub lists it as 165 MB), about 370 MB installed | |
-| **Internet** | For translation and slip checks | The same, plus a one-time OCR model download (about 56 MB) |
-| **Thunder API key** | Optional, only for slip checks | The same |
+| **Disk** | About 170 MB download, about 365 MB installed | |
+| **Internet** | For translation | The same, plus a one-time OCR model download (about 56 MB) |
 
 > [!NOTE]
 > The app's `Info.plist` declares macOS 12, but the bundled Python and its libraries are built for macOS 26.
@@ -93,14 +96,14 @@
 | | |
 |---|---|
 | **Latest release** | <https://github.com/kehsb/snaplens-mac/releases/latest> |
-| **Snaplens 0.16.0** | [Snaplens-0.16.0.dmg](https://github.com/kehsb/snaplens-mac/releases/download/v0.16.0/Snaplens-0.16.0.dmg) (173 MB, Apple Silicon) |
-| **SHA-256** | `fe62cb556b2351d90939fe9d239aeb37744351feb1c0869b8fb1ac450e472007` |
+| **Snaplens 0.17.0** | [Snaplens-0.17.0.dmg](https://github.com/kehsb/snaplens-mac/releases/download/v0.17.0/Snaplens-0.17.0.dmg) (about 170 MB, Apple Silicon) |
+| **SHA-256** | `b24f2f70cffd7699156f0404a1bd94a8bb1aec0792ee241b969a3810d2391358` |
 
 To verify the download:
 
 ```bash
-shasum -a 256 ~/Downloads/Snaplens-0.16.0.dmg
-# fe62cb556b2351d90939fe9d239aeb37744351feb1c0869b8fb1ac450e472007
+shasum -a 256 ~/Downloads/Snaplens-0.17.0.dmg
+# b24f2f70cffd7699156f0404a1bd94a8bb1aec0792ee241b969a3810d2391358
 ```
 
 ### First launch
@@ -137,7 +140,8 @@ signed with the same certificate. If capture stops working after an update, rese
 
 1. Press **⌃⌥S**, or choose **แคปหน้าจอ** (Capture screen) from the menu bar icon. Every display freezes.
 2. Drag a region, or hover over a highlighted panel and click it.
-3. OCR starts straight away and outlines each line it finds.
+3. OCR starts straight away and outlines each line it finds. QR codes are read at the same time and explained on a
+   card beside the selection.
 4. Click lines (or press **⌘A**) to translate them, or press the blue **แปล** (Translate) button for every line.
    **▾** picks the target language.
 5. Mark it up if you like, then press **⌘C** to copy the image and close, **⌘S** to save it, or **Esc** to close.
@@ -214,59 +218,44 @@ every launch. OCR is built and tested for **Chinese, English and Thai**. The Chi
   colour and size popover instead.
 - **Copying and saving.** **⌘C** copies the crop with its translations and drawings, without selection marks, and
   closes the capture. **⌘S** saves it as PNG or JPEG (default `snaplens.png` in Pictures) and closes the capture once
-  saved. Until you quit, the last folder used for an image or a slip receipt is offered next.
+  saved. Until you quit, the last folder you saved an image to is offered next.
 
-### QR codes and slip checks
+### QR codes
 
-Snaplens decodes the QR codes in a selection, retrying small or blurred ones. Each code is boxed in the colour of its
-verdict, and numbered when there are several.
+Snaplens decodes every QR code in the selection, retrying small or blurred ones. Each code is boxed in blue on the
+image: a lone code gets a QR badge, and several are numbered top to bottom, as on the card. When it finds codes, the
+size tag says *พบ QR N รายการ* (N QR codes found). The boxes are on-screen guides, shown while the Select tool is on:
+copying or saving the image leaves them out.
+
+A card beside the selection says what each code holds:
 
 | QR type | Card title | What you see |
 |---|---|---|
-| Bank-transfer slip (mini-QR) | สลิปโอนเงิน | Sending bank and reference. Checked with Thunder |
-| TrueMoney Wallet slip | สลิป TrueMoney Wallet | Fields read from the code; the format is inferred from real slips, as there is no official spec. Checked with Thunder |
+| Link | ลิงก์ | The link as text. A web link also gets an **เปิดลิงก์** (Open link) button |
+| Anything else | ข้อความ | The text |
 | PromptPay | พร้อมเพย์ (รับเงิน) | Recipient (phone, national ID or tax ID, e-wallet, or bank account), amount and name |
 | Thai QR bill payment / bill barcode | Thai QR จ่ายบิล / บาร์โค้ดจ่ายบิล | Biller ID, Ref 1, Ref 2 and amount |
-| Other EMVCo merchant QR | QR รับชำระเงิน (EMVCo) | Generic merchant code |
-| Link | ลิงก์ | The URL as plain text, never a clickable link |
-| Anything else | ข้อความ | The text |
+| Other EMVCo merchant QR | QR รับชำระเงิน (EMVCo) | Amount, merchant name and city, when the code has them |
+| Bank-transfer slip (mini-QR) | สลิปโอนเงิน | Sending bank and reference, which is all the code holds |
+| TrueMoney Wallet slip | สลิป TrueMoney Wallet | Transaction, number and date; the format is inferred from real slips, as there is no official spec |
 
-- **CRC check.** If a slip or payment QR fails its CRC-16/CCITT check, the card warns that the data may have been
-  altered.
+- **Payment QRs** (PromptPay, bill payment and EMVCo) are labelled *QR นี้ใช้จ่ายเงิน* ("this QR is for paying").
+- **CRC check.** If a payment or slip code fails its CRC-16/CCITT check, the card warns in red that the data may have
+  been altered.
 - **Bank names** are shown for 18 Thai bank codes.
-- **Payment QRs are labelled** *QR นี้ใช้จ่ายเงิน ไม่ใช่สลิป* ("this QR is for paying, not a slip").
+- **Slip codes are read, not verified.** The card shows what the code says; it cannot tell whether the transfer
+  happened.
 
-#### Checking a slip
+Using the card:
 
-1. Get an API key from [Thunder](https://document.thunder.in.th/th/v2/) under your own account.
-2. Add it in **Settings > ตรวจสลิป (Slip check) > Thunder API key > ใส่คีย์…**, or in the key box on the slip card
-   (**บันทึกและตรวจ**, Save and check), which checks the waiting slips straight away.
-3. Capture a slip. The check starts automatically and runs once per selection, so resizing does not spend more quota.
-
-The bank confirms or denies the transaction through Thunder. Snaplens then compares its answer with what OCR reads near
-that code in the image: amount, sender name and account, receiver name and account, date and time (within ±2 minutes)
-and reference. The columns are *ในภาพสลิป* (in the slip image) and *ธนาคารยืนยัน* (confirmed by the bank).
-
-- **✓** the image shows the same value.
-- **✗** the image plainly shows something else. This can be an edited image or an OCR misread.
-- **?** OCR could not tell. A **?** never counts against the slip, and the reference is never marked ✗.
-
-| Colour | Verdict | Meaning |
-|---|---|---|
-| Green | ธนาคารยืนยันรายการ | The bank confirms the transaction |
-| Amber | ข้อมูลในภาพไม่ตรงกับธนาคาร | A field in the image differs from the bank's record |
-| Amber | สลิปนี้เคยถูกตรวจแล้ว / ตรวจสลิปนี้ไปแล้วเมื่อ … | This slip has been checked before (duplicate) |
-| Amber | สลิปเดียวกันซ้ำในภาพนี้ | The same slip appears twice in this capture |
-| Red | ไม่พบรายการนี้ในระบบธนาคาร | The bank has no such transaction: possibly fake, or older than about 7–30 days |
-| Grey | *(error message)* | The check could not be completed |
-
-The card never turns green before the comparison has finished. Its buttons:
-
-- **ตรวจใหม่** (Check again) retries a failed check.
-- **คัดลอก** (Copy) copies a text summary.
-- **บันทึกใบตรวจ** (Save receipt) saves a PNG of the slip next to the card, with the check time (Buddhist calendar),
-  "Thunder API" and the Snaplens version in the footer. It is offered in Documents (or the last folder you saved to)
-  as `slip_YYYYmmdd-HHMMSS_<amount>.png`, and appears once every answer is in and OCR has finished.
+- **คัดลอก** (Copy) copies what the card says as text: each code's title, fields and warning, plus the raw payload
+  (`QR: …`) for payment and slip codes. The capture stays open.
+- **เปิดลิงก์** (Open link) appears when the selection holds a single code that is a web link (`http://` or
+  `https://`). It closes the capture, as Esc does, and opens the link in your default browser. Other schemes, such as
+  `javascript:`, `file:` or app links, never get the button.
+- **Field values** such as phone numbers, references and amounts can be selected; **⌘C** then copies the selected
+  text. A click on the image gives the keys back to the capture.
+- **Several codes** are listed in one card, numbered like their badges and separated by a line.
 
 ## Keyboard and mouse
 
@@ -277,13 +266,13 @@ The card never turns green before the comparison has finished. Its buttons:
 | **⌃⌥S** | Start a capture from any app (changeable in Settings) |
 | **Esc** | Discard text being typed, else close the colour popover, else close the capture |
 | **⌘A** | Select every line, switch to the Select tool and translate |
-| **⌘C** | Copy the image (with translations and drawings) and close |
+| **⌘C** | Copy the image (with translations and drawings) and close. With text selected on the QR card, copy that text |
 | **⌘S** | Save the image as PNG or JPEG |
 | **⌘Z** | Undo the last drawing |
 | **⌘-click** / **⌘-drag** | Add or remove a line / add lines to the selection |
 | **⇧ Shift** + drag an edge or corner | Resize, keeping the aspect ratio |
 | **Scroll wheel** (before selecting) | Step out to the enclosing panel, or back in |
-| **Enter** | Place text (Text tool), or save the key and check the slip (slip card key box) |
+| **Enter** | Place text (Text tool) |
 | **Right-click** | Select tool: context menu. Drawing tool: colour and size. Before a selection: cancel it, or close |
 | **⌃-click** on the toolbar | Same as right-click |
 | **⌘,** / **⌘Q** | Settings / Quit, from the menu bar menu. During a capture ⌘, and ⌘H do nothing; ⌘Q still quits |
@@ -293,17 +282,16 @@ The shortcut is bound to physical key positions, so **⌃⌥S** works while the 
 ## Settings
 
 <p align="center">
-  <img src="docs/images/settings.png" width="600" alt="The Snaplens settings window in dark mode, styled like System Settings. It shows the Control-Option-S shortcut, reading mode set to Auto, no Thunder API key yet, and the Open at login switch turned on.">
+  <img src="docs/images/settings.png" width="600" alt="The Snaplens settings window in dark mode, styled like System Settings. It shows the Control-Option-S shortcut, reading mode set to Auto, and the Open at login switch.">
 </p>
 
 The menu bar menu has **แคปหน้าจอ** (Capture screen), **ภาษาที่อ่าน** (Reading language), **ตั้งค่า…** (Settings, ⌘,)
 and **ออกจาก Snaplens** (Quit, ⌘Q). Opening Snaplens again while it runs also brings up Settings. The sidebar shows
-the version, the current shortcut, and whether the OCR models are ready and slip checks are available.
+the version, the current shortcut, and whether the OCR models are ready.
 
 | Section | Setting |
 |---|---|
 | **การแคป** (Capture) | **คีย์ลัดแคปหน้าจอ** (capture shortcut) · **ภาษาที่อ่าน** (reading mode) |
-| **ตรวจสลิป** (Slip check) | **Thunder API key**, shown masked except its last 4 characters |
 | **ทั่วไป** (General) | **เปิดเมื่อเข้าสู่ระบบ** (Open at login) |
 
 - **Changing the shortcut.** Click **เปลี่ยน…** (Change), press the new combination, then release all keys to save it;
@@ -329,17 +317,18 @@ the version, the current shortcut, and whether the OCR models are ready and slip
 
 ### What leaves your Mac
 
-**Local only:** screen capture, OCR, QR decoding, panel detection and the slip comparison. Screenshots are never
-uploaded. The complete list of network requests:
+**Local only:** screen capture, OCR, QR decoding and panel detection. Screenshots are never uploaded. The complete
+list of network requests:
 
 | What | When | Sent to | What is sent |
 |---|---|---|---|
 | Translation | When you press แปล, **pick a language from ▾, or select lines**, including ⌘A and right-clicking a line (selecting does not translate while the eye shows originals) | Google Translate's unofficial web endpoint (`https://translate.google.com/m`) | The text of the lines that need translating, in the URL query string, and the target language. Normally one request for all lines; if Google's reply has a different number of lines, each line is sent to Google again on its own |
 | Translation fallback | If the Google request fails, including when the text is 5,000 characters or more, or a per-line Google retry fails | MyMemory (`http://api.mymemory.translated.net/get`, redirected to HTTPS) | Each line (cut to 490 characters, four at a time) and a guessed source language. **The first request goes over plain HTTP** |
-| Slip check | Automatically, when the selection contains a bank or TrueMoney slip QR **and** a key is saved | Thunder (`https://api.thunder.in.th/v2/verify/…`) | The QR payload text, or for TrueMoney a freshly redrawn image of that QR alone; a duplicate-check flag; your API key. **No screen pixels** |
 | OCR models | First launch from source, and `build.sh` | ModelScope | Nothing of yours: it downloads about 56 MB of model files. The DMG already includes them |
 
-There is no telemetry, analytics, crash reporting or update check. Translation errors are printed to stderr only.
+**เปิดลิงก์** (Open link) on the QR card hands a web link to your default browser, which loads it; Snaplens itself
+sends nothing. There is no telemetry, analytics, crash reporting or update check. Translation errors are printed to
+stderr only.
 
 ### What is stored
 
@@ -347,15 +336,9 @@ There is no telemetry, analytics, crash reporting or update check. Translation e
 
 | Data | Location |
 |---|---|
-| Thunder API key (app) | `~/Library/Application Support/smartshot/thunder.key`: a plain text file, **not the Keychain**, kept when you reinstall |
-| Thunder API key (from source) | `thunder.key` in the repository root (git-ignored), else the `THUNDER_API_KEY` environment variable |
 | Preferences (the shortcut only) | `~/Library/Preferences/com.smartshot.smartshot.plist` |
 | Login item (when enabled) | `~/Library/LaunchAgents/smartshot.plist` |
-| Images and receipts | Only where you save them |
-
-> [!TIP]
-> The key file is created with default permissions (0644), but it sits inside `~/Library`, which only your account can
-> open. To lock the file itself down too: `chmod 600 ~/Library/Application\ Support/smartshot/thunder.key`
+| Images | Only where you save them |
 
 ## FAQ and troubleshooting
 
@@ -384,17 +367,13 @@ Translation uses Google Translate's unofficial web endpoint, with the MyMemory f
 day) as a fallback. Either can be rate-limited or change without notice. Try again later, or translate fewer lines at
 a time.
 
-**A slip shows *ไม่พบรายการนี้ในระบบธนาคาร* (not found).**
-The bank has no such transaction: the slip may be fake, or older than about 7–30 days.
+**A QR code is not found.**
+Make sure the whole code is inside the selection. Very small or heavily blurred codes can be missed: zoom in on the
+page and capture again.
 
-**The slip card shows a grey message instead of a verdict.**
-The check could not be completed, and the card explains why in Thai, for example a missing or invalid key, used-up
-quota, an expired package, an IP that is not whitelisted, a server error or being offline. A Bangkok Bank slip in its
-first 5 minutes shows *สลิปธนาคารกรุงเทพยังไม่เข้าระบบ* (not in the bank's system yet): wait a moment and press
-**ตรวจใหม่** (Check again).
-
-**The card shows ✗, but I think the slip is genuine.**
-The comparison is based on OCR, so ✗ can be a misread as well as an edited image. Check that row yourself.
+**The เปิดลิงก์ (Open link) button is missing.**
+It appears only when the selection holds a single QR code and that code is a web link starting with `http://` or
+`https://`. With several codes, select just the one you want, or use **คัดลอก** (Copy).
 
 **Open at login stopped working.**
 The login item points at the app's location. If you moved the app, turn **เปิดเมื่อเข้าสู่ระบบ** off and on again.
@@ -417,24 +396,26 @@ The app bundles its own Python runtime, Qt, OpenCV, ONNX Runtime and the OCR mod
   break. The fallback guesses the source language as Chinese, Thai or English only.
 - **OCR** is built for Chinese, English and Thai only, works on the still image taken when you press the shortcut, and runs
   one recognition at a time.
-- **Slip checks** need a Thunder key and quota. TrueMoney parsing is based on observed slips, not a published spec. A
-  verdict reflects the bank's answer and an OCR comparison; it is not a guarantee that a slip is genuine.
-- **The slip card does not scroll.** Two checked slips fit on a 1080p screen; three do not.
-- **Panel and slip detection** is a heuristic. If it misses, use the scroll wheel or drag by hand.
+- **QR codes.** TrueMoney slip codes are parsed from observed slips, not a published spec. Slip codes are only read,
+  never verified.
+- **The QR card does not scroll.** About five payment codes fit on a 1080p screen; more run past the bottom.
+- **Panel detection** is a heuristic. If it misses, use the scroll wheel or drag by hand.
 - **Not built (yet):** redo, scrolling or window capture, capture history.
-- **The Thunder key** is stored as a plain file, not in the Keychain.
 - **No automated tests or CI.**
 
 ## Uninstall
 
 1. Turn off **เปิดเมื่อเข้าสู่ระบบ** (Open at login) in Settings, then quit Snaplens (**ออกจาก Snaplens**, ⌘Q).
-2. Delete the app and its data, and reset the Screen Recording permission:
+2. Delete the app and its settings, and reset the Screen Recording permission:
 
 ```bash
-rm -rf /Applications/Snaplens.app ~/Library/Application\ Support/smartshot
+rm -rf /Applications/Snaplens.app
 rm -f ~/Library/Preferences/com.smartshot.smartshot.plist ~/Library/LaunchAgents/smartshot.plist
 tccutil reset ScreenCapture io.github.kehsb.snaplens
 ```
+
+If you used Snaplens 0.16.0 or earlier, also delete `~/Library/Application Support/smartshot` if it is there: those
+versions kept their slip-check key in it.
 
 ## Build from source
 
@@ -452,7 +433,6 @@ python3.13 -m venv .venv
 - The first launch downloads the OCR models (about 56 MB) from ModelScope into the virtual environment.
 - From source, the **Screen Recording permission goes to the terminal or IDE** that runs Python, not to Snaplens.
 - Notices appear as the in-app panel instead of Notification Center.
-- The Thunder key is read from `thunder.key` in the repository root, or from `THUNDER_API_KEY`.
 - `./dev.sh` restarts the app whenever `app.py` or anything in `smartshot/` changes.
 
 ### Build the app and DMG
@@ -473,7 +453,7 @@ In order, the script:
    the Screen Recording permission across rebuilds.
 3. Downloads the OCR models so they are bundled.
 4. Builds `dist/Snaplens.app` with PyInstaller from `smartshot.spec`: a one-folder app (a one-file app would unpack
-   the whole bundle, about 370 MB with the models, to a temporary folder on every start), without unused models, other
+   the whole bundle, about 365 MB with the models, to a temporary folder on every start), without unused models, other
    inference engines, QML, PDF, WebEngine or Qt translations.
 5. Signs it with `codesign --force --deep`.
 6. Creates `installer/Snaplens-<version>.dmg` (UDZO, with an `Applications` link).
@@ -486,7 +466,7 @@ The bundle id is `io.github.kehsb.snaplens`, the executable is `Snaplens.app/Con
 
 ```text
 snaplens-mac/
-├── app.py                  # Entry point: single instance, no Dock icon, theme, starts the app
+├── app.py                  # Entry point: single instance, no Dock icon, Edit menu, starts the app
 ├── smartshot/              # The app package (internal name "smartshot")
 │   ├── config.py           # Version, default shortcut, languages, fonts, OCR thresholds
 │   ├── task.py             # Task: runs a function off the UI thread (QThread)
@@ -494,11 +474,8 @@ snaplens-mac/
 │   │   ├── engine.py       # RapidOCR: shared PP-OCRv6 detector, PP-OCRv5 Chinese/Thai recognizers
 │   │   └── translate.py    # Google batch translation, then per-line MyMemory fallback
 │   ├── qr/
-│   │   ├── scan.py         # Finds and decodes QR codes; detects panels and slips in a capture
-│   │   └── promptpay.py    # EMVCo, PromptPay, bill and slip QR parsing; CRC; Thai formatting
-│   ├── slip/
-│   │   ├── thunder.py      # Thunder key storage, the verify call, mapping the answer to fields
-│   │   └── compare.py      # Bank fields vs the OCR'd image: ✓ / ✗ / ?
+│   │   ├── scan.py         # Finds and decodes QR codes; detects panels in a capture
+│   │   └── promptpay.py    # What a QR says: EMVCo, PromptPay, bill and slip QR parsing; CRC; banks, money
 │   ├── system/
 │   │   ├── mac.py          # AppKit/Quartz/Carbon: display capture, overlay level, permission, shortcut
 │   │   ├── hotkey.py       # Shortcut names and symbols, and which combinations are allowed
@@ -506,14 +483,14 @@ snaplens-mac/
 │   └── ui/
 │       ├── main.py         # App controller: menu bar, shortcut, settings state, capture lifecycle
 │       ├── menubar.py      # Status item and its native menu
-│       ├── settings.py     # Native Settings window, shortcut recorder, Thunder key sheet
-│       ├── overlay.py      # Capture canvas: selection, OCR/translate, drawing, copy/save, receipt
+│       ├── settings.py     # Native Settings window and shortcut recorder
+│       ├── overlay.py      # Capture canvas: selection, OCR/translate, drawing, copy/save, QR boxes
 │       ├── chrome.py       # Native overlay chrome: toolbar, hint bar, toast, popover, menus, keys
-│       ├── slipcard.py     # Native QR and slip card: verdicts, comparison table, key box
+│       ├── qrcard.py       # Native QR card: what each code says, Copy and Open link
 │       ├── native.py       # Shared AppKit building blocks: Liquid Glass with fallback, stacks, menus
 │       ├── glass.py        # Qt-painted glass for the canvas (size tag, magnifier label)
 │       ├── notify.py       # Notification Center notices, or the in-app panel
-│       └── assets.py       # Fonts, line-icon glyphs, app icon
+│       └── assets.py       # Fonts, the QR badge's glyph, app icon
 ├── assets/icons/           # App and menu bar icons
 ├── docs/images/            # README screenshots
 ├── testset/                # Sample image
@@ -528,7 +505,7 @@ snaplens-mac/
 - **Qt (PySide6)** paints the capture canvas (the frozen screenshot, selection, translations and drawings) and
   provides worker threads, the settings store and the single-instance socket.
 - **AppKit through PyObjC** draws everything around it: the menu bar menu, the overlay toolbar, hint bar, popovers and
-  menus, the QR and slip card, the Settings window and Notification Center notices. Liquid Glass (`NSGlassEffectView`)
+  menus, the QR card, the Settings window and Notification Center notices. Liquid Glass (`NSGlassEffectView`)
   needs macOS 26; the `NSVisualEffectView` fallback for older systems is untested.
 - **Quartz** captures each display at full resolution, and **Carbon** provides the global shortcut.
 - **OCR:** the PP-OCRv6 small detector finds lines once, and each line is recognized with the PP-OCRv5 mobile Chinese
@@ -539,15 +516,15 @@ snaplens-mac/
 Issues and pull requests are welcome.
 
 - **Bug reports:** include your macOS version and Mac model, whether you use the DMG or run from source, and the steps
-  to reproduce. Remove personal data from screenshots first, especially slips, which show names, account numbers and
-  references.
+  to reproduce. Remove personal data from screenshots first, such as names, account numbers and payment QR codes.
 - **Pull requests:** keep each to one topic. There is no test suite or CI yet, so describe how you tested by hand,
   including the macOS version. For larger changes, such as localization or a new capture mode, open an issue first.
-- **Code:** put code in the domain packages under `smartshot/` (`ocr`, `qr`, `slip`, `system`, `ui`). Build native UI
+- **Code:** put code in the domain packages under `smartshot/` (`ocr`, `qr`, `system`, `ui`). Build native UI
   with AppKit through PyObjC, reusing `smartshot/ui/native.py`; Qt paints the capture canvas. Keep slow work off the
   UI thread with `smartshot.task.Task`. User-facing strings are Thai, so match the existing wording. `pyflakes` is in
   `requirements.txt`: run `.venv/bin/pyflakes app.py smartshot` before pushing.
-- **Never commit** a `thunder.key` or real slip images. `thunder.key` and `testset/slips/` are git-ignored.
+- **Never commit** an API key or real slip images. `thunder.key` and `testset/slips/`, the `ThunderAPI` branch's key
+  file and slip images, stay git-ignored on main too, so they are not committed after you switch branches.
 
 ## Acknowledgements
 
@@ -558,7 +535,7 @@ Snaplens is built on these open-source projects:
 | [RapidOCR](https://github.com/RapidAI/RapidOCR) | Apache-2.0 | OCR pipeline and the ONNX conversions of the PP-OCR models |
 | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) PP-OCR models | Apache-2.0 | PP-OCRv6 detection, PP-OCRv5 Chinese and Thai recognition |
 | [ONNX Runtime](https://github.com/microsoft/onnxruntime) | MIT | On-device inference |
-| [OpenCV](https://github.com/opencv/opencv-python) (opencv-python) | Apache-2.0; the wheel bundles a GPL-3.0-or-later build of FFmpeg | Image processing, QR detection and encoding |
+| [OpenCV](https://github.com/opencv/opencv-python) (opencv-python) | Apache-2.0; the wheel bundles a GPL-3.0-or-later build of FFmpeg | Image processing, panel detection, QR detection and decoding |
 | [Qt for Python](https://doc.qt.io/qtforpython-6/) (PySide6, shiboken6) | LGPL-3.0 / GPL-2.0 / GPL-3.0 | Capture canvas, threads, settings, single-instance socket |
 | [PyObjC](https://github.com/ronaldoussoren/pyobjc) | MIT | AppKit, Quartz and Notification Center from Python |
 | [deep-translator](https://github.com/nidhaloff/deep-translator) | MIT | Google Translate and MyMemory clients |
@@ -571,8 +548,8 @@ pyclipper, omegaconf, antlr4-python3-runtime, PyYAML, Pillow, requests, urllib3,
 certifi (MPL-2.0), beautifulsoup4, soupsieve, tqdm (MPL-2.0 and MIT), colorlog, colorama, packaging,
 typing_extensions and setuptools.
 
-External services: Google Translate (unofficial web endpoint), [MyMemory](https://mymemory.translated.net) by
-Translated, and [Thunder](https://document.thunder.in.th/th/v2/) for slip verification under your own account.
+External services: Google Translate (unofficial web endpoint) and [MyMemory](https://mymemory.translated.net) by
+Translated.
 
 ## License
 
@@ -591,6 +568,4 @@ See [Acknowledgements](#acknowledgements) for the full list.
 
 ---
 
-<sub>Snaplens is an independent project. It is not affiliated with Google, MyMemory (Translated), Thunder, the Bank of
-Thailand or any bank. Slip checks run under your own Thunder account, and a verdict reflects the bank's answer and an
-OCR comparison of the image; it is not a guarantee.</sub>
+<sub>Snaplens is an independent project. It is not affiliated with Google or MyMemory (Translated).</sub>

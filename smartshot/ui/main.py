@@ -7,7 +7,6 @@ from PySide6.QtWidgets import QApplication
 
 from smartshot.config import HOTKEY, TRAY
 from smartshot.ocr.engine import warmup
-from smartshot.slip.thunder import thunder_key
 from smartshot.system import mac
 from smartshot.system.hotkey import keyname
 from smartshot.task import Task
@@ -53,8 +52,6 @@ class Main(QObject):
     def states(self):  # how things stand, for the settings' sidebar: (title, line, green)
         return [("พร้อมใช้งาน", "โมเดลอ่านข้อความโหลดแล้ว", True) if self.warmed else
                 ("กำลังเตรียม", "กำลังโหลดโมเดลอ่านข้อความ…", False),
-                ("ตรวจสลิปได้", "มี Thunder API key แล้ว", True) if thunder_key() else
-                ("ยังตรวจสลิปไม่ได้", "ใส่ Thunder API key ทางขวา", False),
                 (f"รออยู่ที่{TRAY}", "ปิดหน้าต่างนี้ได้", False)]
 
     def refresh(self):  # what the settings and the menu bar icon say

@@ -6,7 +6,7 @@ import sys
 import time
 
 
-VERSION = "0.16.0"  # bump on feature changes
+VERSION = "0.17.0"  # bump on feature changes
 FROZEN = getattr(sys, "frozen", False)  # Snaplens.app built by PyInstaller (build.sh), not python app.py
 HERE = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # app.py, assets/; the app's too
 SOURCES = glob.glob(os.path.join(HERE, "smartshot", "**", "*.py"), recursive=True) + [os.path.join(HERE, "app.py")]
@@ -14,7 +14,6 @@ BUILD = time.strftime("%H:%M:%S", time.localtime(os.path.getmtime(sys.executable
                                                  max(map(os.path.getmtime, SOURCES))))
 TITLE = f"Snaplens v{VERSION} (build {BUILD})"
 HOTKEY = "ctrl+alt+s"  # Control+Option+S, until the user records their own (kept in QSettings)
-DATA = os.path.expanduser("~/Library/Application Support/smartshot")  # the app's files, kept through reinstalls
 CTRL = "⌘"  # the shortcuts' modifier, as their keycaps say it: ⌘+C
 TRAY = "แถบเมนู"  # where the app's icon lives
 # translation targets: Google code -> (name, MyMemory code)

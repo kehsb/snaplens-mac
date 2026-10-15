@@ -116,7 +116,7 @@ def tile(name, rgb):  # System Settings' icon: a white SF Symbol on a coloured r
     return v
 
 
-def box(view, radius, fill, border=False):  # view on a rounded, filled box (opaque: what glass can't be, a receipt)
+def box(view, radius, fill, border=False):  # view on a rounded, filled box (opaque: what glass can't be)
     b = AppKit.NSBox.alloc().init()
     b.setBoxType_(AppKit.NSBoxCustom)
     b.setTitlePosition_(AppKit.NSNoTitle)
@@ -229,7 +229,7 @@ def menu(rows, keep, title=""):
     return m
 
 
-def install_edit_menu():  # once: ⌘X ⌘C ⌘V ⌘A in native text fields (the settings' key sheet, the card's key box)
+def install_edit_menu():  # once: ⌘C ⌘A in native text (the QR card's selectable labels); ⌘X ⌘V KeyMonitor hands to Qt
     main = AppKit.NSApp.mainMenu()
     if main is None or main.itemWithTitle_("Edit") is not None:
         return

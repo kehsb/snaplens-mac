@@ -46,8 +46,7 @@ CAP = dynamic((1, 1, 1, .16), (1, 1, 1, 1))  # a keycap
 CHIP = dynamic((76 / 255, 194 / 255, 1, .42), (47 / 255, 155 / 255, 224 / 255, .85))  # the hint bar's mode: the tint glass's
 RING = dynamic((1, 1, 1, .9), (*INK, .85))  # the popover's colour picked
 TRACK = dynamic((0, 0, 0, .25), (*INK, .07))  # under its sizes
-TOASTS = {"ok": ("checkmark", AppKit.NSColor.systemGreenColor()), "save": ("square.and.arrow.down", AppKit.NSColor.systemBlueColor()),
-          "bad": ("xmark", AppKit.NSColor.systemRedColor())}
+TOASTS = {"ok": ("checkmark", AppKit.NSColor.systemGreenColor()), "bad": ("xmark", AppKit.NSColor.systemRedColor())}
 
 
 def fit(view):  # what its constraints make it, once laid out somewhere roomy (a bordered box's edge counts only then)
@@ -422,7 +421,7 @@ class Chrome:
         v.setHidden_(True)
         return v
 
-    def say(self, text, tone="ok"):  # tone: "ok" (a check), "save", "bad" (red glass, an x)
+    def say(self, text, tone="ok"):  # tone: "ok" (a check), "bad" (red glass, an x)
         o, (glyph, color) = self.o, TOASTS[tone]
         self.toast_icon.setImage_(symbol(glyph, 15, AppKit.NSFontWeightSemibold))
         self.toast_disc.setFillColor_(color)
@@ -583,9 +582,9 @@ def letter(e):  # Esc, else the key a ⌘-shortcut means: its letter, or its pla
 
 class KeyMonitor:
     """A capture's keys while a native view has them: one per capture (Main: from the overlays opening to end_capture),
-    for every overlay. With an overlay's own view first responder, Qt has them as ever. In the card's key box only
-    Esc and ⌘S are the overlay's (Return is the box's: use_key); in a card label ⌘C and ⌘A copy and select its text;
-    from anything else native, Esc ⌘C ⌘A ⌘Z ⌘S go back to the overlay's view, which takes the keys from then on.
+    for every overlay. With an overlay's own view first responder, Qt has them as ever. In a card label ⌘C and ⌘A copy
+    and select its text; from anything else native, Esc ⌘C ⌘A ⌘Z ⌘S go back to the overlay's view, which takes the
+    keys from then on.
     ⌘C ⌘A ⌘X ⌘V on their way to the overlay's view are handed to it here: the Edit menu (install_edit_menu) would take
     them first, a disabled item too (the image's ⌘C and ⌘A, the text tool's field). Esc shuts an open ink popover
     first, and only that. ⌘H and ⌘, (the app menu's Hide and Settings…) do nothing during a capture; ⌘Q still quits."""
@@ -617,8 +616,8 @@ class KeyMonitor:
             if not (k == "esc" or cmd and k in ("c", "a", "z", "s")):
                 return e
             field = fr.delegate() if isinstance(fr, AppKit.NSTextView) and fr.isFieldEditor() else None
-            if field is not None and (k not in ("esc", "s") if field.isEditable() else k in ("c", "a")):
-                return e  # the key box's, a label's
+            if field is not None and k in ("c", "a"):
+                return e  # a label's
             view.window().makeFirstResponder_(view)
         if cmd and k in ("c", "a", "x", "v"):  # Qt's, not the Edit menu's
             view.keyDown_(e)

@@ -1,31 +1,25 @@
-"""The capture: select, OCR, translate, mark up; QR cards and slip verdicts. The canvas is Qt-painted; its chrome
-(toolbar, hints, toast, menus, ink popover: chrome.py; the QR card: slipcard.py) is native AppKit inside its NSView."""
+"""The capture: select, OCR, translate, mark up; a card saying what its QR codes say. The canvas is Qt-painted; its
+chrome (toolbar, hints, toast, menus, ink popover: chrome.py; the QR card: qrcard.py) is native AppKit inside its NSView."""
 import os
-from datetime import datetime
 
-from AppKit import NSAppearanceNameAqua, NSAppearanceNameDarkAqua
+from AppKit import NSWorkspace
+from Foundation import NSURL
 from PySide6.QtCore import QLineF, QPoint, QPointF, QRect, QRectF, QSizeF, QStandardPaths, Qt, QTimer, Signal
 from PySide6.QtGui import (QBrush, QColor, QCursor, QFont, QFontMetrics, QGuiApplication, QImage, QKeySequence,
                            QPainter, QPainterPath, QPen, QPixmap, QPolygonF, QRegion, QTransform)
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QWidget
 
-from smartshot.config import CTRL, LANGS, VERSION
+from smartshot.config import CTRL, LANGS
 from smartshot.ocr.engine import ocr
 from smartshot.ocr.translate import translate
-from smartshot.qr.promptpay import TH_MONTHS, qr_info
 from smartshot.qr.scan import panels, scan_qr
-from smartshot.slip.thunder import slip_fields, store_key, verify_slip
 from smartshot.system import mac
 from smartshot.task import Task
 from smartshot.ui.assets import font, glyph_svg, ui_font
 from smartshot.ui.chrome import Chrome
-from smartshot.ui.glass import DIM, chrome, clear, frame_shadow, frost, ink, paint_glass, qimage, rgba, rim, shadow
+from smartshot.ui.glass import DIM, clear, frame_shadow, frost, ink, paint_glass, qimage, rgba, rim, shadow
 from smartshot.ui.native import host
-from smartshot.ui.slipcard import KEYLESS, TONES, SlipCard, model, tone_rgb
-
-
-def tone_ink(tone):  # a verdict's colour, solid: its code's box and badge on the image, the tag's dot
-    return QColor(*tone_rgb(tone))
+from smartshot.ui.qrcard import QRCard, model
 
 
 class Layer:
@@ -39,7 +33,7 @@ class Layer:
         self.unit = unit  # image px per screen px, so strokes look the same at any DPI
         self.items, self.boxes, self.tr = [], [], {}  # items: [(rect, text)]; tr: text -> translation
         self.shapes, self.sel, self.show_tr = [], set(), True  # shapes: [kind, color, points, text, size]
-        self.qrs, self.marks = [], {}  # qrs: [(QPolygonF, payload)] found in the crop; marks: payload -> verdict, glyph
+        self.qrs = []  # [(QPolygonF, payload)] found in the crop
 
     def set_items(self, items):  # a new OCR result: translations already known come back by text
         self.items, self.sel = items, set()
@@ -79,9 +73,8 @@ class Layer:
                     p.fillRect(r, QColor(66, 133, 244, 90))
                 else:
                     p.drawRect(r)
-            for n, (poly, text) in enumerate(self.qrs, 1):  # boxed and badged like their verdicts on the QR card
-                tone, glyph = self.marks.get(text, ("info", None))
-                u, c = self.unit, tone_ink(tone)
+            for n, (poly, _) in enumerate(self.qrs, 1):  # boxed and badged as on the QR card: its head disc's blue
+                u, c = self.unit, QColor(76, 194, 255)
                 box = poly.boundingRect().adjusted(-6 * u, -6 * u, 6 * u, 6 * u)
                 b = QRectF(box.x() - 12 * u, box.y() - 12 * u, 26 * u, 26 * u)  # G3: 26px, 12 out from its corner
                 p.save()
@@ -92,7 +85,7 @@ class Layer:
                 p.drawRoundedRect(box, 14 * u, 14 * u)
                 p.drawImage(QRectF(b.x() - 10 * u, b.y() - 6 * u, 46 * u, 46 * u), shadow(26, 26, 13, 10, (0, 0, 0, .3)))
                 c.setAlphaF(.85)
-                p.setPen(QPen(rgba(*TONES[tone][1][:3], .7), u))
+                p.setPen(QPen(rgba(170, 228, 255, .7), u))
                 p.setBrush(c)
                 p.drawEllipse(b)
                 rim(p, b.adjusted(u, u, -u, -u), 12 * u, rgba(255, 255, 255, .5))
@@ -100,10 +93,10 @@ class Layer:
                     p.setPen(QColor(Qt.white))
                     p.setFont(ui_font(round(13 * u), QFont.Bold))
                     p.drawText(b, Qt.AlignCenter, str(n))
-                elif glyph:
+                else:
                     g = QRectF(0, 0, 15 * u, 15 * u)
                     g.moveCenter(b.center())
-                    glyph_svg(glyph, "#ffffffff", 2).render(p, g)
+                    glyph_svg("qr", "#ffffffff", 2).render(p, g)
                 p.restore()
         p.setRenderHint(QPainter.Antialiasing)
         for s in self.shapes:
@@ -176,12 +169,11 @@ class Layer:
 
 
 class Overlay(QWidget):
-    """One per screen, ShareX/Snipaste style. Drag out a region, or click the panel the pointer previews (a slip
-    around its QR code; the wheel steps out to the panel around it and back), then work on it in place: OCR starts
-    at once in the background, lines can be selected lens-style, drawn on, and translated over the image; drag the
-    border to resize (Shift keeps its shape), right-click for a menu (a drawing tool's size while drawing). QR codes
-    in it are explained on a card beside it, slips checked with Thunder and compared with what the image says; the
-    card saves as a receipt. No second window."""
+    """One per screen, ShareX/Snipaste style. Drag out a region, or click the panel the pointer previews (the wheel
+    steps out to the panel around it and back), then work on it in place: OCR starts at once in the background, lines
+    can be selected lens-style, drawn on, and translated over the image; drag the border to resize (Shift keeps its
+    shape), right-click for a menu (a drawing tool's size while drawing). QR codes in it are explained on a card
+    beside it. No second window."""
     started = Signal()  # a selection began on this screen: the others drop theirs
     closed = Signal()
     ZOOM, SPAN = 8, 17  # magnifier shows SPAN x SPAN screenshot pixels, each ZOOM x ZOOM: a 136 circle
@@ -194,8 +186,7 @@ class Overlay(QWidget):
     lang = "th"  # translation target: shared by every screen and kept for the next capture (Thai on restart)
     SIZES = [(0.6, "เล็ก", 4), (1, "กลาง", 7), (1.6, "ใหญ่", 11), (2.5, "ใหญ่มาก", 16)]  # x each tool's usual size; its dot
     sizes = {}  # tool -> size; shared and kept like lang (mutated, never reassigned)
-    seen = {}  # slip payload -> when this run first checked it (Thunder says "duplicate" after that)
-    folder = ""  # where the last image or receipt went: the next one is offered there
+    folder = ""  # where the last image went: the next one is offered there
 
     def __init__(self, shot_bgr, geometry, mode):
         super().__init__(None, Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -213,10 +204,9 @@ class Overlay(QWidget):
         # a/b: selection corners. Compare with None: QPoint(0, 0) is falsy
         self.a = self.b = self.layer = self.edit = self.queued = self.band = self.grip = None
         self.drag = None  # "region" | "resize" | "band" | "shape" while the left button is down
-        self.slips = {}  # QR payload -> Thunder's (data, error, when); None while asking. Per selection
-        # what a click can pick (widget px, smallest first), slips around their codes; the one previewed, the
-        # cursor's own (the wheel moves off it), the one a press was on
-        self.picks, self.qr_picks, self.hover, self.base_pick, self.pick = [], [], None, None, None
+        # what a click can pick (widget px, smallest first); the one previewed, the cursor's own (the wheel moves off
+        # it), the one a press was on
+        self.picks, self.hover, self.base_pick, self.pick = [], None, None, None
         k = self.k
         finder = Task(lambda: panels(shot_bgr, k))  # no self in it: the overlay may be gone when it's done
         finder.done.connect(self.set_picks)  # a method: disconnected if the overlay goes first
@@ -232,15 +222,13 @@ class Overlay(QWidget):
         # (shown while nothing is selected), the toast, the menus; over them the card
         self.view = host(self)
         self.chrome = Chrome(self)
-        self.card = SlipCard(self.view, self.chrome_pressed, self.retry, self.copy_card, self.save_receipt, self.use_key,
-                             self.escape)
+        self.card = QRCard(self.view, self.chrome_pressed, self.copy_card, self.open_link)
         # show_qrs put off while a press on the card is held: a rebuild then would take the button, and its click, away
         self.again = QTimer(self, singleShot=True, interval=50, timeout=self.show_qrs)
 
     def chrome_pressed(self):
         """A press on native chrome (before its control acts), as one on Qt's did: a text-tool edit is put on the
-        image, and the keys come back to the image unless the press is in the card's key box or on its label being
-        selected."""
+        image, and the keys come back to the image unless the press is on a card label being selected."""
         self.end_edit()
         if not self.card.keeps_keys() and self.view.window() is not None:
             self.view.window().makeFirstResponder_(self.view)
@@ -292,7 +280,7 @@ class Overlay(QWidget):
         self.end_edit(False)
         self.gen += 1  # OCR/translation still running for it is ignored when it lands
         self.a = self.b = self.layer = self.queued = self.band = self.drag = self.grip = None
-        self.status, self.asked, self.slips = "", set(), {}
+        self.status, self.asked = "", set()
         self.chrome.show_bar(False)
         self.chrome.hints(True)
         self.show_qrs()  # no layer: removes the card
@@ -309,27 +297,24 @@ class Overlay(QWidget):
     def fail(self, msg):
         self.ready, self.asked = True, set()
         self.set_status(f"ผิดพลาด: {msg[:80]}")
-        if self.layer and self.layer.qrs:  # a slip held back for the amount check gets its verdict
-            self.show_qrs()
 
     def place_bar(self):  # the toolbar under the selection (chrome.place: place_bar's rule), then the card
         self.chrome.place()
         self.place_card()
 
-    def place_card(self):  # beside the selection, off the toolbar (SlipCard.place); not while the border is dragged:
-        if self.drag == "resize" or self.a is None:  # a slip's answer landing then waits for the release
+    def place_card(self):  # beside the selection, off the toolbar (QRCard.place); not while the border is dragged:
+        if self.drag == "resize" or self.a is None:  # codes read then wait for the release
             return
         bar = self.chrome.bar_frame()
         self.card.place(self.sel_rect().getRect(), bar.getRect() if bar is not None else None)
 
-    def set_picks(self, found):  # panels() is back: boxes in widget px; the cursor may already be on a slip
-        self.picks, self.qr_picks = ([QRect(*(round(v / self.k) for v in b)) for b in boxes] for boxes in found)
+    def set_picks(self, found):  # panels() is back: boxes in widget px; the cursor may already be on one
+        self.picks = [QRect(*(round(v / self.k) for v in b)) for b in found]
         self.hover = self.base_pick = self.pick_at(self.cur) if self.cur is not None and self.a is None else None
         self.update()
 
-    def pick_at(self, pt):  # a slip around its code under the cursor, else the smallest panel there
-        r = next((r for r in self.qr_picks if r.contains(pt)), None)
-        return r if r is not None else next((r for r in self.picks if r.contains(pt)), None)
+    def pick_at(self, pt):  # the smallest panel under the cursor
+        return next((r for r in self.picks if r.contains(pt)), None)
 
     def open_layer(self):  # selection made: tools appear and text is read right away, in the background
         self.hover = self.base_pick = None
@@ -354,48 +339,14 @@ class Overlay(QWidget):
         self.update()
 
     def show_qrs(self):
-        """The QR card beside the selection, read like a bank receipt: verdict, amount, who, when (slipcard.model). Slips
-        are checked with Thunder once per selection: the answer is kept, so resizing doesn't ask (or spend quota) again."""
+        """The QR card beside the selection: what each code in it says (qrcard.model)."""
         L = self.layer
         if not L or not L.qrs:
             return self.card.show(None)
-        m = model([(p, poly.boundingRect().center().toTuple()) for poly, p in L.qrs],
-                  [(t, QRectF(r).center().toTuple()) for r, t in L.items], self.slips, self.ready, Overlay.seen)
-        for kind, p in m.ask:  # new slips are asked first: a verdict waits for every answer (one may pay the same)
-            self.check_slip(kind, p)
-        L.marks = m.marks
-        self.update()  # the codes on the image take the verdicts' colours
-        if self.card.busy():  # a card button held down (an answer landing mid-click): rebuilt once it's let go
+        if self.card.busy():  # a card button held down (codes read again mid-click): rebuilt once it's let go
             return self.again.start()
-        self.card.show(m)
+        self.card.show(model([p for _, p in L.qrs]))
         self.place_card()
-
-    def retry(self, payloads):  # the card's ตรวจใหม่: those slips asked again
-        for p in payloads:
-            self.slips.pop(p, None)
-        self.show_qrs()
-
-    def use_key(self, k):  # the no-key card's box: thunder.key, then the slips that waited for it are asked again
-        if not (k := k.strip()):
-            return
-        if not store_key(k):
-            return self.chrome.say("คีย์ไม่ถูกต้อง: มีได้แค่ตัวอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมาย", "bad")
-        for p in [p for p, s in self.slips.items() if s and s[1] in KEYLESS]:
-            del self.slips[p]
-        self.show_qrs()
-
-    def check_slip(self, kind, payload):  # the answer lands in self.slips and redraws the card
-        def ask():  # in the worker: Thunder keeps a check even when reset/close drops its answer here
-            res = verify_slip(kind, payload)
-            if res[0] and not res[0].get("isDuplicate"):  # our own first check: a "duplicate" later in this run is ours
-                Overlay.seen.setdefault(payload, datetime.now())
-            return res
-
-        def done(res):
-            self.slips[payload] = (*res, datetime.now())  # when: printed on the receipt
-            self.show_qrs()
-        self.slips[payload] = None
-        self.run(ask, done)
 
     def on_ocr(self, items, c):
         self.layer.set_items([(r.translated(c.topLeft()), t) for r, t in items])
@@ -404,8 +355,6 @@ class Overlay(QWidget):
         fn, self.queued = self.queued, None
         if fn:
             fn()
-        if self.layer.qrs:  # the amount check needs the text: redraw once it's read
-            self.show_qrs()
 
     def after_ocr(self, fn):  # an action pressed while OCR is still running waits for it
         if self.ready:
@@ -475,6 +424,13 @@ class Overlay(QWidget):
         QGuiApplication.clipboard().setText(text)
         self.chrome.say("คัดลอกแล้ว")
 
+    def open_link(self, url):  # the card's เปิดลิงก์: the capture ends first (the browser would open under it), as Esc
+        u = NSURL.URLWithString_(url)
+        if u is None or (u.scheme() or "").lower() not in ("http", "https"):
+            return self.chrome.say("เปิดลิงก์ไม่ได้", "bad")
+        self.closed.emit()
+        NSWorkspace.sharedWorkspace().openURL_(u)
+
     def copy_image(self):
         self.end_edit()
         QGuiApplication.clipboard().setImage(self.layer.render())
@@ -495,37 +451,6 @@ class Overlay(QWidget):
         self.chrome.escape()  # the ink popover shut first: its monitor would eat the dialog's first click
         with mac.under_dialogs(self):
             return QFileDialog.getSaveFileName(self, title, os.path.normpath(path), types)[0]
-
-    def save_receipt(self):
-        """The card (its buttons cut off, opaque: nothing of the screen behind it) beside the slip's own pixels, in
-        screen px, and when it was checked; made before the file dialog, whose event loop may rebuild the card when
-        an answer lands."""
-        L, k = self.layer, self.k
-        pm = QImage.fromData(self.card.receipt_png(k, NSAppearanceNameDarkAqua if mac.dark() else NSAppearanceNameAqua))
-        slip, (bg, edge) = L.img.copy(L.crop), chrome()
-        when = max(s[2] for s in self.slips.values() if s)
-        note = f"ตรวจเมื่อ {when.day} {TH_MONTHS[when.month - 1]} {when.year + 543} {when:%H:%M:%S} น. · Thunder API · Snaplens v{VERSION}"
-        f, pad = font(round(12 * k)), round(16 * k)
-        fh = QFontMetrics(f).height()
-        out = QImage(3 * pad + slip.width() + pm.width(), 3 * pad + max(slip.height(), pm.height()) + fh, QImage.Format_RGB32)
-        out.fill(QColor(bg))
-        p = QPainter(out)
-        p.drawImage(pad, pad, slip)
-        x = 2 * pad + slip.width()
-        p.drawImage(x, pad, pm)
-        p.setPen(QColor(edge))  # close the card where its buttons were cut off
-        p.drawLine(x, pad + pm.height() - 1, x + pm.width() - 1, pad + pm.height() - 1)
-        p.setFont(f)
-        p.setPen(ink(.7))
-        p.drawText(QRect(pad, out.height() - pad - fh, out.width() - 2 * pad, fh), Qt.AlignLeft | Qt.AlignVCenter, note)
-        p.end()
-        amount = next((f"_{x[2]:.2f}" for _, q in L.qrs if (s := self.slips.get(q)) and s[0]
-                       for x in slip_fields(qr_info(q)[0], s[0]) if x[1] == "amount" and isinstance(x[2], (int, float))), "")
-        folder = self.folder or QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
-        path = self.ask_path("บันทึกใบตรวจ", os.path.join(folder, f"slip_{when:%Y%m%d-%H%M%S}{amount}.png"), "PNG (*.png)")
-        if path:  # names and accounts in it: only where the user puts it
-            Overlay.folder = os.path.dirname(path)
-            self.chrome.say(*(("บันทึกใบตรวจแล้ว", "save") if out.save(path, "PNG") else ("บันทึกใบตรวจไม่สำเร็จ", "bad")))
 
     def undo(self):
         if self.layer and self.layer.shapes:
@@ -617,7 +542,7 @@ class Overlay(QWidget):
             p.setPen(dash)
             p.drawRoundedRect(f.adjusted(1, 1, -1, -1), 17, 17)
             p.restore()
-            self._tag(p, f, f"{s.width()} × {s.height()}", "สลิป · คลิกเพื่อเลือก" if h in self.qr_picks else "คลิกเพื่อเลือก")
+            self._tag(p, f, f"{s.width()} × {s.height()}", "คลิกเพื่อเลือก")
         if self.band:
             p.setPen(QPen(QColor("#4285f4"), 1, Qt.DashLine))
             p.drawRect(QRect(*self.band).normalized())
@@ -628,17 +553,11 @@ class Overlay(QWidget):
         return (lambda p, r: self.backdrop(p, r.toRect())) if self.clear else None
 
     def state(self):
-        """The tag's words after the size, and its dot's colour (G7): with codes in it, how their checks stand (amber
-        while asking, then the worst verdict's colour), else the status: blue while working, red if it failed."""
+        """The tag's words after the size, and its dot's colour (G7): with codes in it, how many (the card's blue), else
+        the status: blue while working, red if it failed."""
         s, L = self.status, self.layer
-        if L and L.qrs and L.marks and s.startswith(("กำลังอ่าน", "อ่านแล้ว", "อ่านข้อความไม่ได้")):
-            slips = [p for _, p in L.qrs if qr_info(p)[0] in ("slip", "truemoney")]
-            asking = len({p for p in slips if self.slips.get(p) is None})
-            done = any((a := self.slips.get(p)) and a[0] for p in slips)
-            head = f"สลิป {len(slips)} ใบ" if len(slips) == len(L.qrs) else f"พบ QR {len(L.qrs)} รายการ"
-            worst = min((t for t, _ in L.marks.values()), key=["bad", "warn", "none", "info", "ok"].index)
-            return (head + (f" · กำลังตรวจ {asking}" if asking else " · ตรวจแล้ว" if done else ""),
-                    tone_ink("warn" if asking else worst))
+        if L and L.qrs and s.startswith(("กำลังอ่าน", "อ่านแล้ว", "อ่านข้อความไม่ได้")):
+            return f"พบ QR {len(L.qrs)} รายการ", QColor("#4CC2FF")
         if not s:
             return "", None
         return s, QColor("#4CC2FF") if s.startswith("กำลัง") else \
@@ -841,12 +760,12 @@ class Overlay(QWidget):
             r, pick, self.pick = self.sel_rect(), self.pick, None
             if (self.b - self.a).manhattanLength() <= 8 and pick is not None:  # a click on a panel: that panel
                 self.a, self.b = pick.topLeft(), pick.bottomRight()  # sel_rect spans both corners
-            elif r.width() <= 8 or r.height() <= 8:  # a click on nothing, or a slip of the hand: keep picking
+            elif r.width() <= 8 or r.height() <= 8:  # a click on nothing, or a twitch of the hand: keep picking
                 return self.reset()
             self.open_layer()
         self.update()
 
-    def escape(self):  # Esc: drops a text-tool edit, else the capture (from the card's key field too)
+    def escape(self):  # Esc: drops a text-tool edit, else the capture
         return self.end_edit(False) if self.edit else self.closed.emit()
 
     def keyPressEvent(self, e):

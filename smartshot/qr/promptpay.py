@@ -1,7 +1,6 @@
-"""What a QR says: EMVCo TLV, PromptPay, banks, money and Thai times as slips print them."""
+"""What a QR says: EMVCo TLV, PromptPay, banks, money."""
 import binascii
 import re
-from datetime import datetime, timedelta, timezone
 
 
 AID_PROMPTPAY = ("A000000677010111", "A000000677010114")  # PromptPay transfer: merchant / customer presented
@@ -10,7 +9,6 @@ BANKS = {"002": "กรุงเทพ", "004": "กสิกรไทย", "006
          "024": "ยูโอบี", "025": "กรุงศรี", "030": "ออมสิน", "033": "ธอส.", "034": "ธ.ก.ส.", "066": "อิสลาม", "067": "ทิสโก้",
          "069": "เกียรตินาคินภัทร", "070": "ไอซีบีซี", "071": "ไทยเครดิต", "073": "แลนด์ แอนด์ เฮ้าส์", "098": "SME D"}
 BAD_CRC = "⚠ CRC ไม่ตรง: ข้อมูลใน QR อาจถูกแก้ไข"
-TH_MONTHS = "ม.ค. ก.พ. มี.ค. เม.ย. พ.ค. มิ.ย. ก.ค. ส.ค. ก.ย. ต.ค. พ.ย. ธ.ค.".split()
 
 
 def tlv(s):
@@ -49,23 +47,6 @@ def money(v, currency="764"):
     return f"{amount} บาท" if currency in ("764", "THB") else f"{amount} ({currency})"
 
 
-def bank_time(iso):  # Thunder's ISO time -> datetime in Thai time, as on the slip, whatever this PC's zone; or None
-    try:
-        d = datetime.fromisoformat(str(iso))
-    except ValueError:
-        return None
-    return d.astimezone(timezone(timedelta(hours=7))) if d.tzinfo else d
-
-
-def thai_time(iso):  # -> ("1 ม.ค. 2569 · 09:00 น.", "45 นาทีก่อน"): as slips print it, and how old it is
-    if (d := bank_time(iso)) is None:
-        return str(iso or ""), ""
-    m = int((datetime.now(d.tzinfo) - d).total_seconds() // 60)
-    ago = "" if m < 0 else "เมื่อสักครู่" if m < 1 else f"{m} นาทีก่อน" if m < 60 else \
-        f"{m // 60} ชั่วโมงก่อน" if m < 1440 else f"{m // 1440} วันก่อน"
-    return f"{d.day} {TH_MONTHS[d.month - 1]} {d.year + 543} · {d:%H:%M} น.", ago
-
-
 def proxy(k, v):  # who a PromptPay QR pays: 01 mobile (0066...), 02 national / tax ID, 03 e-wallet, 04 bank account
     if k == "01":
         return "เบอร์โทร", phone("0" + v[4:] if v.startswith("0066") else v)
@@ -78,8 +59,8 @@ def proxy(k, v):  # who a PromptPay QR pays: 01 mobile (0066...), 02 national / 
 
 def qr_info(s):
     """What a QR payload is, for people -> (kind, title, [(label, value)], warning or ""). Thai QR Payment
-    (BOT, EMVCo), the slip "mini QR", TrueMoney slips, bill barcodes, links, text. Only kind "slip" (bank
-    transfer) and "truemoney" can be checked with Thunder: every other kind carries all it has in the code."""
+    (BOT, EMVCo), the slip "mini QR", TrueMoney slips, bill barcodes, links, text. A slip's code holds only its
+    reference (and the bank), not the transfer."""
     s = s.strip()
     t = tlv(s) or {}
     if "91" in t and set(t) <= {"00", "51", "91"} and t.get("51", "TH") == "TH":  # a slip's QR

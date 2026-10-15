@@ -1,23 +1,20 @@
 """The settings: a native AppKit window laid out as System Settings (a sidebar with the app, its capture keys and
 how things stand; the settings in grouped rows). Main keeps the state and the logic; this shows it and hands it
-what's changed. The capture keys are recorded in their row, as a Mac's Keyboard
-Shortcuts are; Thunder's key is asked in a sheet."""
+what's changed. The capture keys are recorded in their row, as a Mac's Keyboard Shortcuts are."""
 import os
 
 import AppKit
 import objc
 from Foundation import NSMakeRect, NSMakeSize, NSObject
-from PySide6.QtCore import QTimer
 
 from smartshot.config import ASSETS, TRAY, VERSION
-from smartshot.slip.thunder import store_key, thunder_key
 from smartshot.system import mac
 from smartshot.system.autostart import autostart
 from smartshot.system.hotkey import MODS, chord, key_rule, keyname
 from smartshot.ui.native import box, dynamic, fixed, label, stack, target, tile
 
 FLAGS = {"cmd": 1 << 20, "shift": 1 << 17, "alt": 1 << 19, "ctrl": 1 << 18}  # NSEventModifierFlag*, by MODS' names
-SIDEBAR, CONTENT, HEIGHT = 230, 500, 460
+SIDEBAR, CONTENT, HEIGHT = 230, 500, 420
 
 
 class _Delegate(NSObject):  # the window's: its close button hides it (and Main says once where the app went)
@@ -156,15 +153,13 @@ class SettingsWindow:
         self.mode.setAction_("fire:")
         lang = Row("globe", (18, 169, 138), "ภาษาที่อ่าน", self.mode)
         lang.say("ภาษาของข้อความที่จะให้อ่านตอนแคป")
-        self.api_btn = button("ใส่คีย์…", lambda _: self.ask_key(), self.keep)
-        self.api_row = Row("key.fill", (229, 145, 20), "Thunder API key", self.api_btn)
         self.boot = AppKit.NSSwitch.alloc().init()
         self.boot.setTarget_(target(lambda s: autostart(bool(s.state())), self.keep))
         self.boot.setAction_("fire:")
         boot = Row("power", (122, 130, 148), "เปิดเมื่อเข้าสู่ระบบ", self.boot)
         boot.say(f"เริ่มเองแล้วรออยู่ที่{TRAY}")
         views = []
-        for title, rows in (("การแคป", (self.key_row, lang)), ("ตรวจสลิป", (self.api_row,)), ("ทั่วไป", (boot,))):
+        for title, rows in (("การแคป", (self.key_row, lang)), ("ทั่วไป", (boot,))):
             head = label(title, 13, AppKit.NSFontWeightBold)
             views += [stack([head], insets=(0, 4, 0, 0)), group(rows)]
         body = stack(views, vertical=True, spacing=10, align=AppKit.NSLayoutAttributeWidth)
@@ -184,15 +179,12 @@ class SettingsWindow:
         return vc
 
     # --- what it shows
-    def refresh(self):  # from Main's state: the keys, the mode, the key, the switch, how things stand
+    def refresh(self):  # from Main's state: the keys, the mode, the switch, how things stand
         m = self.main
         if not self.recording:
             self.show_keys(m.key)
             self.key_row.say("")
         self.mode.selectItemAtIndex_(m.mode)
-        k = thunder_key()
-        self.api_row.say(("•" * 8 + (k[-4:] if len(k) > 8 else "")) if k else "ยังไม่มีคีย์ · ต้องใช้ตอนตรวจสลิป")
-        self.api_btn.setTitle_("แก้ไข…" if k else "ใส่คีย์…")
         self.boot.setState_(AppKit.NSControlStateValueOn if autostart() else AppKit.NSControlStateValueOff)
         self.caption.setStringValue_(f"หรือเลือก แคปหน้าจอ จากไอคอนที่{TRAY}")
         for v in list(self.states.arrangedSubviews()):
@@ -221,7 +213,7 @@ class SettingsWindow:
     def show(self):
         if not self.window.isVisible():
             self.window.center()
-        self.main.refresh()  # thunder.key may have been saved from a capture's card meanwhile
+        self.main.refresh()
         mac.activate()
         self.window.makeKeyAndOrderFront_(None)
         self.window.makeFirstResponder_(None)  # no focus ring on a button till Tab
@@ -293,26 +285,3 @@ class SettingsWindow:
         self.cancel_record(saved=True)
         self.key_row.say(f"{''.join(keyname(self.chord).split('+'))} บันทึกแล้ว")
         return None
-
-    # --- Thunder's key, asked in a sheet
-    def ask_key(self, error=""):
-        a = AppKit.NSAlert.alloc().init()
-        a.setMessageText_("Thunder API key")
-        a.setInformativeText_(error or "วางคีย์จาก Thunder ใช้ตรวจสลิปกับธนาคาร")
-        if error:
-            a.setAlertStyle_(AppKit.NSAlertStyleWarning)
-        field = AppKit.NSSecureTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 280, 24))
-        field.setPlaceholderString_("วางคีย์ที่นี่")
-        a.setAccessoryView_(field)
-        a.addButtonWithTitle_("บันทึก")
-        a.addButtonWithTitle_("ยกเลิก")
-        a.window().setInitialFirstResponder_(field)
-
-        def done(answer):
-            k = field.stringValue().strip()
-            if answer != AppKit.NSAlertFirstButtonReturn or not k:
-                return
-            if not store_key(k):
-                return QTimer.singleShot(0, lambda: self.ask_key("คีย์ไม่ถูกต้อง: ใช้ได้แค่ อักษรอังกฤษ ตัวเลข และเครื่องหมาย"))
-            self.main.refresh()
-        a.beginSheetModalForWindow_completionHandler_(self.window, done)
