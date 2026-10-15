@@ -22,9 +22,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/kehsb/snaplens-mac/releases/download/v0.17.0/Snaplens-0.17.0.dmg"><img src="https://img.shields.io/badge/Download%20for%20Mac-Snaplens%200.17.0-0A84FF?style=for-the-badge&logo=apple&logoColor=white" alt="ดาวน์โหลด Snaplens 0.17.0 สำหรับ Mac"></a>
+  <a href="https://github.com/kehsb/snaplens-mac/releases/download/v0.17.1/Snaplens-0.17.1.dmg"><img src="https://img.shields.io/badge/Download%20for%20Mac-Snaplens%200.17.1-0A84FF?style=for-the-badge&logo=apple&logoColor=white" alt="ดาวน์โหลด Snaplens 0.17.1 สำหรับ Mac"></a>
   <br>
-  <sub>Snaplens-0.17.0.dmg · ประมาณ 170 MB · macOS 26 Tahoe · Apple Silicon ·
+  <sub>Snaplens-0.17.1.dmg · ประมาณ 170 MB · macOS 26 Tahoe · Apple Silicon ·
   <a href="https://github.com/kehsb/snaplens-mac/releases/latest">เวอร์ชันล่าสุด</a> ·
   <a href="#ติดตั้ง">วิธีติดตั้ง</a></sub>
 </p>
@@ -82,14 +82,14 @@
 | | |
 |---|---|
 | **เวอร์ชันล่าสุด** | <https://github.com/kehsb/snaplens-mac/releases/latest> |
-| **Snaplens 0.17.0** | [Snaplens-0.17.0.dmg](https://github.com/kehsb/snaplens-mac/releases/download/v0.17.0/Snaplens-0.17.0.dmg) (ประมาณ 170 MB, Apple Silicon) |
-| **SHA-256** | `b24f2f70cffd7699156f0404a1bd94a8bb1aec0792ee241b969a3810d2391358` |
+| **Snaplens 0.17.1** | [Snaplens-0.17.1.dmg](https://github.com/kehsb/snaplens-mac/releases/download/v0.17.1/Snaplens-0.17.1.dmg) (ประมาณ 170 MB, Apple Silicon) |
+| **SHA-256** | `c0d2e9cdef86a3e1c7036f9f6862b8bdcfe6862483163fbea1321b968aa86138` |
 
 ตรวจสอบไฟล์ที่ดาวน์โหลดมา:
 
 ```bash
-shasum -a 256 ~/Downloads/Snaplens-0.17.0.dmg
-# b24f2f70cffd7699156f0404a1bd94a8bb1aec0792ee241b969a3810d2391358
+shasum -a 256 ~/Downloads/Snaplens-0.17.1.dmg
+# c0d2e9cdef86a3e1c7036f9f6862b8bdcfe6862483163fbea1321b968aa86138
 ```
 
 ### เปิดใช้ครั้งแรก
