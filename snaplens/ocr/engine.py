@@ -6,7 +6,7 @@ import numpy as np
 from PySide6.QtCore import QRect
 from rapidocr import LangRec, ModelType, OCRVersion, RapidOCR
 
-from smartshot.config import MIN_SCORE, PAD, SMALL, UPSCALE
+from snaplens.config import MIN_SCORE, PAD, SMALL, UPSCALE
 
 
 _engines = {}

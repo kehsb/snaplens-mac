@@ -9,10 +9,9 @@ import objc
 import UserNotifications as UN
 from Foundation import NSBundle, NSMakeRect, NSObject, NSOperationQueue, NSRunLoop, NSRunLoopCommonModes, NSTimer
 
-from smartshot.config import ASSETS, FROZEN
-from smartshot.ui.native import fixed, glass, label, pin, stack
+from snaplens.config import ASSETS, BUNDLE, FROZEN
+from snaplens.ui.native import fixed, glass, label, pin, stack
 
-APP = "io.github.kehsb.snaplens"  # the built app's bundle id (smartshot.spec): what Notification Center knows it by
 NOTICE = "snaplens.notice"  # every notice's id: a new one replaces the last
 WIDTH, WORDS, INSET = 340, 256, 14  # the HUD: its width, its text's (after the icon), its gap to the screen's corner
 _center = _delegate = _hud = None
@@ -20,7 +19,7 @@ _center = _delegate = _hud = None
 
 def notify(title, text):  # title, and a line or two under it; one at a time
     global _center, _delegate
-    if not (FROZEN and NSBundle.mainBundle().bundleIdentifier() == APP):
+    if not (FROZEN and NSBundle.mainBundle().bundleIdentifier() == BUNDLE):  # Notification Center's: the bundle's icon
         return hud(title, text)
     if _center is None:
         _center, _delegate = UN.UNUserNotificationCenter.currentNotificationCenter(), _NoticeDelegate.alloc().init()

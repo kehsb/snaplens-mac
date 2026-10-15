@@ -16,9 +16,9 @@ import AppKit
 from Foundation import NSMakeRange, NSMakeRect
 from PySide6.QtCore import QTimer
 
-from smartshot.config import THAI
-from smartshot.qr.promptpay import qr_info
-from smartshot.ui.native import GLASS, Surface, box, dynamic, fixed, glass, pin, srgb, stack, symbol, target
+from snaplens.config import THAI
+from snaplens.qr.promptpay import qr_info
+from snaplens.ui.native import GLASS, Surface, box, dynamic, fixed, glass, pin, srgb, stack, symbol, target
 
 LINK = re.compile(r"https?://\S+", re.I)  # what เปิดลิงก์ opens: a web link, nothing else (no file:, no app schemes)
 PAY = ("promptpay", "emv", "bill")  # qr_info's kinds that ask for money

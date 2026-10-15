@@ -2,6 +2,9 @@
 pixels, the transparency setting and the capture hotkey. The capture hotkey is Carbon's RegisterEventHotKey: no Accessibility or Input Monitoring permission, and
 the chord goes to us alone. Screen captures need Screen Recording (System Settings > Privacy & Security)."""
 import ctypes
+import os
+import subprocess
+import sys
 from contextlib import contextmanager
 
 import AppKit
@@ -12,6 +15,14 @@ from PySide6.QtCore import QRect
 
 def accessory():  # no Dock icon or app menu: it lives in the menu bar (the bundle says so too: LSUIElement)
     AppKit.NSApp.setActivationPolicy_(AppKit.NSApplicationActivationPolicyAccessory)
+
+
+def relaunch(*args):  # this Snaplens.app opened again by LaunchServices, a new copy in the background -> it was
+    app = os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))  # .../Snaplens.app/Contents/MacOS/Snaplens
+    try:  # -n: a new copy, though this one counts as the app running
+        return subprocess.run(["/usr/bin/open", "-n", "-g", app, "--args", *args], timeout=10).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def activate():  # bring the app forward, so its window takes the keys (an accessory app isn't, by a click on it)

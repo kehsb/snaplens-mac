@@ -6,10 +6,12 @@ import sys
 import time
 
 
-VERSION = "0.17.0"  # bump on feature changes
+VERSION = "0.17.1"  # bump on feature changes
+BUNDLE = "io.github.kehsb.snaplens"  # the built app's bundle id (snaplens.spec): its prefs, login item and notices
 FROZEN = getattr(sys, "frozen", False)  # Snaplens.app built by PyInstaller (build.sh), not python app.py
+QUIET = bool({"--startup", "--login"} & set(sys.argv))  # at login: launchd's --startup, or the copy it hands on to (app.py)
 HERE = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # app.py, assets/; the app's too
-SOURCES = glob.glob(os.path.join(HERE, "smartshot", "**", "*.py"), recursive=True) + [os.path.join(HERE, "app.py")]
+SOURCES = glob.glob(os.path.join(HERE, "snaplens", "**", "*.py"), recursive=True) + [os.path.join(HERE, "app.py")]
 BUILD = time.strftime("%H:%M:%S", time.localtime(os.path.getmtime(sys.executable) if FROZEN else  # auto: when saved/built
                                                  max(map(os.path.getmtime, SOURCES))))
 TITLE = f"Snaplens v{VERSION} (build {BUILD})"

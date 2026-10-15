@@ -1,13 +1,13 @@
 #!/bin/sh
-# Snaplens.app (PyInstaller, smartshot.spec) -> installer/Snaplens-<version>.dmg, and installed in /Applications (one
-# running from there quits for it and starts again).
+# Snaplens.app (PyInstaller, snaplens.spec) -> installer/Snaplens-<version>.dmg (dmgbuild, dmg.py), and installed in
+# /Applications (one running from there quits for it and starts again).
 # Signed by this Mac's own "Snaplens Local Signing" certificate (made here the first time, kept in the login keychain):
 # Screen Recording, granted once, holds for every build signed by it. No Developer ID: on another Mac the first open
 # is right-click > Open.
 set -e
 cd "$(dirname "$0")"
 SIGNER="Snaplens Local Signing"
-VER=$(sed -n 's/^VERSION = "\(.*\)".*/\1/p' smartshot/config.py)
+VER=$(sed -n 's/^VERSION = "\(.*\)".*/\1/p' snaplens/config.py)
 
 if ! security find-certificate -c "$SIGNER" >/dev/null 2>&1; then  # self-signed, for code signing; codesign alone may use it
     tmp=$(mktemp -d)
@@ -19,22 +19,22 @@ if ! security find-certificate -c "$SIGNER" >/dev/null 2>&1; then  # self-signed
 fi
 ID=$(security find-identity -p codesigning | awk -v s="\"$SIGNER\"" 'index($0, s) {print $2; exit}')  # (untrusted: by hash)
 
-.venv/bin/python -c "from smartshot.ocr.engine import warmup; warmup()"  # the models into rapidocr/models, to be bundled
-.venv/bin/pyinstaller --noconfirm --log-level WARN smartshot.spec
+.venv/bin/python -c "from snaplens.ocr.engine import warmup; warmup()"  # the models into rapidocr/models, to be bundled
+.venv/bin/pyinstaller --noconfirm --log-level WARN snaplens.spec
 codesign --force --deep --sign "$ID" dist/Snaplens.app
 mkdir -p installer
-rm -rf build/dmg "installer/Snaplens-$VER.dmg"
-mkdir -p build/dmg
-cp -R dist/Snaplens.app build/dmg/
-ln -s /Applications build/dmg/Applications  # drag it there
-hdiutil create -quiet -volname Snaplens -srcfolder build/dmg -format UDZO "installer/Snaplens-$VER.dmg"
+rm -f "installer/Snaplens-$VER.dmg"
+.venv/bin/dmgbuild -s dmg.py -D app=dist/Snaplens.app Snaplens "installer/Snaplens-$VER.dmg"  # the app, a drag to Applications
 echo "installer/Snaplens-$VER.dmg"
 
 APP=/Applications/Snaplens.app
 was=""
-if pkill -f "$APP/Contents/MacOS/smartshot"; then  # its files are about to be replaced
+# by the executable it runs, not its argv (pkill -f): launchd's copy is plain "Snaplens --startup". 0.17: MacOS/smartshot
+pids=$(lsof -t -a -d txt "$APP/Contents/MacOS/Snaplens" "$APP/Contents/MacOS/smartshot" 2>/dev/null || true)
+if [ -n "$pids" ]; then  # its files are about to be replaced
     was=1
-    while pgrep -f "$APP/Contents/MacOS/smartshot" >/dev/null; do sleep .2; done
+    kill $pids
+    for p in $pids; do while kill -0 "$p" 2>/dev/null; do sleep .2; done; done
 fi
 rm -rf "$APP"
 ditto dist/Snaplens.app "$APP"

@@ -1,20 +1,19 @@
 """The app: its menu bar icon and menu, the capture hotkey, the settings it keeps and the captures it opens."""
-import sys
-
-from PySide6.QtCore import QObject, QSettings, QTimer, Signal
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QApplication
 
-from smartshot.config import HOTKEY, TRAY
-from smartshot.ocr.engine import warmup
-from smartshot.system import mac
-from smartshot.system.hotkey import keyname
-from smartshot.task import Task
-from smartshot.ui.chrome import KeyMonitor
-from smartshot.ui.menubar import MenuBar
-from smartshot.ui.notify import notify
-from smartshot.ui.overlay import Overlay
-from smartshot.ui.settings import SettingsWindow
+from snaplens.config import HOTKEY, QUIET, TRAY
+from snaplens.ocr.engine import warmup
+from snaplens.system import mac
+from snaplens.system.hotkey import keyname
+from snaplens.system.prefs import prefs
+from snaplens.task import Task
+from snaplens.ui.chrome import KeyMonitor
+from snaplens.ui.menubar import MenuBar
+from snaplens.ui.notify import notify
+from snaplens.ui.overlay import Overlay
+from snaplens.ui.settings import SettingsWindow
 
 
 class Main(QObject):
@@ -26,7 +25,7 @@ class Main(QObject):
 
     def __init__(self):
         super().__init__()
-        self.settings = QSettings("smartshot", "smartshot")  # ~/Library/Preferences/com.smartshot.smartshot.plist
+        self.settings = prefs()  # ~/Library/Preferences/io.github.kehsb.snaplens.plist
         self.key, self.mode, self.warmed = self.settings.value("hotkey", HOTKEY), 0, False
         self.overlays, self.was_visible, self.hinted, self.shooting, self.monitor = [], False, False, False, None
         self.hotkey.connect(self.capture)
@@ -43,7 +42,7 @@ class Main(QObject):
     def ready(self, _):
         self.warmed = True
         self.refresh()
-        if "--startup" not in sys.argv:  # started by hand and no window opens: say where it went
+        if not QUIET:  # started by hand and no window opens: say where it went
             notify("พร้อมแล้ว", f"กด {self.keys()} หรือเลือก แคปหน้าจอ จากไอคอนที่{TRAY}")
 
     def keys(self):  # the capture keys, for people

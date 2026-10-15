@@ -7,11 +7,11 @@ import AppKit
 import objc
 from Foundation import NSMakeRect, NSMakeSize, NSObject
 
-from smartshot.config import ASSETS, TRAY, VERSION
-from smartshot.system import mac
-from smartshot.system.autostart import autostart
-from smartshot.system.hotkey import MODS, chord, key_rule, keyname
-from smartshot.ui.native import box, dynamic, fixed, label, stack, target, tile
+from snaplens.config import ASSETS, TRAY, VERSION
+from snaplens.system import mac
+from snaplens.system.autostart import USABLE, autostart, login_items, waiting
+from snaplens.system.hotkey import MODS, chord, key_rule, keyname
+from snaplens.ui.native import box, dynamic, fixed, label, stack, target, tile
 
 FLAGS = {"cmd": 1 << 20, "shift": 1 << 17, "alt": 1 << 19, "ctrl": 1 << 18}  # NSEventModifierFlag*, by MODS' names
 SIDEBAR, CONTENT, HEIGHT = 230, 500, 420
@@ -154,12 +154,12 @@ class SettingsWindow:
         lang = Row("globe", (18, 169, 138), "ภาษาที่อ่าน", self.mode)
         lang.say("ภาษาของข้อความที่จะให้อ่านตอนแคป")
         self.boot = AppKit.NSSwitch.alloc().init()
-        self.boot.setTarget_(target(lambda s: autostart(bool(s.state())), self.keep))
+        self.boot.setTarget_(target(self.toggle_boot, self.keep))
         self.boot.setAction_("fire:")
-        boot = Row("power", (122, 130, 148), "เปิดเมื่อเข้าสู่ระบบ", self.boot)
-        boot.say(f"เริ่มเองแล้วรออยู่ที่{TRAY}")
+        self.boot.setEnabled_(USABLE)
+        self.boot_row = Row("power", (122, 130, 148), "เปิดเมื่อเข้าสู่ระบบ", self.boot)
         views = []
-        for title, rows in (("การแคป", (self.key_row, lang)), ("ทั่วไป", (boot,))):
+        for title, rows in (("การแคป", (self.key_row, lang)), ("ทั่วไป", (self.boot_row,))):
             head = label(title, 13, AppKit.NSFontWeightBold)
             views += [stack([head], insets=(0, 4, 0, 0)), group(rows)]
         body = stack(views, vertical=True, spacing=10, align=AppKit.NSLayoutAttributeWidth)
@@ -186,6 +186,12 @@ class SettingsWindow:
             self.key_row.say("")
         self.mode.selectItemAtIndex_(m.mode)
         self.boot.setState_(AppKit.NSControlStateValueOn if autostart() else AppKit.NSControlStateValueOff)
+        if not USABLE:  # run from source: no app to start
+            self.boot_row.say("ใช้ได้เมื่อเปิดจากแอปที่ติดตั้ง")
+        elif waiting():  # on, but Login Items has it switched off
+            self.boot_row.say("อนุญาต Snaplens ใน การตั้งค่าระบบ > ทั่วไป > รายการเข้าสู่ระบบ", bad=True)
+        else:
+            self.boot_row.say(f"เริ่มเองแล้วรออยู่ที่{TRAY}")
         self.caption.setStringValue_(f"หรือเลือก แคปหน้าจอ จากไอคอนที่{TRAY}")
         for v in list(self.states.arrangedSubviews()):
             self.states.removeView_(v)
@@ -197,6 +203,12 @@ class SettingsWindow:
             words = stack([label(title, 12, AppKit.NSFontWeightMedium), label(line, 11, color=AppKit.NSColor.secondaryLabelColor())],
                           vertical=True, spacing=1)
             self.states.addArrangedSubview_(stack([dot, words], spacing=8, align=AppKit.NSLayoutAttributeFirstBaseline))
+
+    def toggle_boot(self, s):  # the user's own flip: the only place Login Items is opened, if macOS waits on it there
+        autostart(bool(s.state()))
+        if s.state() and waiting():
+            login_items()
+        self.refresh()
 
     def show_keys(self, k):  # the sidebar's keycaps and the row's ⌃⌥S
         names = keyname(k).split("+") if k else []

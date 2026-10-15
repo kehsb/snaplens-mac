@@ -23,9 +23,9 @@ import Quartz
 from Foundation import NSMakeRect, NSObject
 from PySide6.QtCore import QPointF, QRect, QTimer
 
-from smartshot.config import CTRL, LANGS
-from smartshot.system import mac
-from smartshot.ui.native import (GLASS, Surface, box, dynamic, fixed, glass, host, label, menu, pin, reported, srgb, stack,
+from snaplens.config import CTRL, LANGS
+from snaplens.system import mac
+from snaplens.ui.native import (GLASS, Surface, box, dynamic, fixed, glass, host, label, menu, pin, reported, srgb, stack,
                                  symbol, target)
 
 try:

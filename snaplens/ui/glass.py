@@ -7,7 +7,7 @@ import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen, QPixmap
 
-from smartshot.system import mac
+from snaplens.system import mac
 
 
 def chrome():  # background, border of glass drawn opaque (Reduce transparency on)

@@ -43,9 +43,9 @@
 > **Snaplens ใช้ภาษาไทยทั้งแอป** ชื่อปุ่มและเมนูของแอปในเอกสารนี้สะกดตรงกับที่เห็นบนจอทุกคำ ส่วนเมนูของ macOS และ GitHub เขียนตามชื่อภาษาอังกฤษ ถ้าเครื่องตั้งเป็นภาษาไทยจะเห็นเป็นชื่อไทยแทน เช่น System Settings คือ การตั้งค่าระบบ และ Privacy & Security คือ ความเป็นส่วนตัวและความปลอดภัย
 
 <p align="center">
-  <img src="docs/images/capture.png" width="820" alt="หน้าจอแคปของ Snaplens บน macOS เลือกหน้าเว็บไว้ใต้แถบเครื่องมือแบบ Liquid Glass QR code ในภาพมีกรอบสีฟ้า การ์ดข้างพื้นที่ที่เลือกบอกว่าเป็นลิงก์ไปที่ github.com/kehsb/snaplens-mac พร้อมปุ่มคัดลอกและเปิดลิงก์">
+  <img src="docs/images/capture.png" width="820" alt="Snaplens บนเดสก์ท็อป macOS เลือกหน้าร้านค้าภาษาจีนในหน้าต่างไว้ใต้แถบเครื่องมือแบบ Liquid Glass ทุกบรรทัดในพื้นที่ที่เลือกถูกแทนที่ด้วยคำแปลภาษาไทยตรงตำแหน่งเดิม">
   <br>
-  <sub>อ่าน QR code ในพื้นที่ที่เลือก: การ์ดบอกว่า QR เขียนว่าอะไร และเปิดลิงก์ได้ทันที ภาพหน้าจอทั้งหมดใช้ข้อมูลจำลอง</sub>
+  <sub>หน้าร้านค้าภาษาจีนที่แปลเป็นไทยทับตำแหน่งเดิม ภาพทั้งหมดใช้หน้าเว็บและข้อมูลตัวอย่าง</sub>
 </p>
 
 ## ฟีเจอร์
@@ -132,9 +132,9 @@ Snaplens ไม่อัปเดตตัวเองและไม่เช�
 ### การแปล
 
 <p align="center">
-  <img src="docs/images/translate.png" width="720" alt="บรรทัดภาษาจีนที่อ่านด้วย OCR ถูกแทนที่ด้วยคำแปลภาษาไทยตรงตำแหน่งเดิม ส่วนบรรทัดพินอินและบรรทัดภาษาไทยที่มีอยู่แล้วไม่ถูกแตะต้อง">
+  <img src="docs/images/translate.png" width="640" alt="ภาพขยายพื้นที่ที่เลือกบนหน้าร้านค้าภาษาจีน ชื่อสินค้า บรรทัดการรับประกัน และคุณสมบัติสี่บรรทัดถูกแทนที่ด้วยคำแปลภาษาไทยตรงตำแหน่งเดิม บนกล่องสีเดียวกับพื้นหน้าเว็บ ส่วนราคาคงไว้ตามเดิม">
   <br>
-  <sub>แปลบรรทัดภาษาจีนเป็นไทยทับที่เดิม โดยตั้งใจข้ามบรรทัดพินอินและบรรทัดภาษาไทย</sub>
+  <sub>แต่ละบรรทัดอยู่ที่เดิมและขนาดเดิม ตัวเลขและราคาคงไว้ตามเดิม</sub>
 </p>
 
 - **เลือกบรรทัดแล้วแปลทันที** คลิกบรรทัดเพื่อเลือก **⌘-คลิก** เพื่อเพิ่มหรือเอาออกทีละบรรทัด **⌘-ลาก** หรือลากคลุมเพื่อเพิ่มหลายบรรทัด และ **⌘A** เพื่อเลือกทั้งหมด คลิกขวาที่บรรทัดที่ยังไม่ได้เลือกก็จะเลือกและแปลให้เหมือนกัน
@@ -172,6 +172,10 @@ Snaplens ไม่อัปเดตตัวเองและไม่เช�
 - **คัดลอกและบันทึก** **⌘C** คัดลอกภาพที่ครอปไว้พร้อมคำแปลและสิ่งที่วาด โดยไม่มีเครื่องหมายการเลือกติดไป แล้วปิดการแคป **⌘S** บันทึกเป็น PNG หรือ JPEG (ค่าเริ่มต้นคือ `snaplens.png` ในโฟลเดอร์ Pictures) แล้วปิดการแคปเมื่อบันทึกเสร็จ จนกว่าจะปิดแอป ครั้งต่อไปจะเสนอโฟลเดอร์ล่าสุดที่ใช้บันทึกรูป
 
 ### QR
+
+<p align="center">
+  <img src="docs/images/qr.png" width="820" alt="หน้าร้านกาแฟในหน้าแคป QR code มีกรอบสีฟ้าพร้อมป้าย QR และการ์ดแบบ Liquid Glass ข้างพื้นที่ที่เลือกบอกว่าเป็นลิงก์ https://example.com/menu พร้อมปุ่มคัดลอกและเปิดลิงก์">
+</p>
 
 Snaplens ถอดรหัส QR ทุกตัวในพื้นที่ที่เลือก และลองซ้ำกับ QR ที่เล็กหรือเบลอ QR แต่ละตัวจะมีกรอบสีฟ้าบนภาพ ถ้ามีตัวเดียวจะมีป้ายรูป QR ถ้ามีหลายตัวจะมีหมายเลขเรียงจากบนลงล่างตรงกับบนการ์ด เมื่อเจอ QR ป้ายบอกขนาดจะขึ้นว่า *พบ QR N รายการ* กรอบเหล่านี้เป็นแค่ตัวช่วยบนจอที่แสดงตอนใช้เครื่องมือเลือกข้อความ ตอนคัดลอกหรือบันทึกรูปจะไม่ติดไปด้วย
 
@@ -224,7 +228,7 @@ Snaplens ถอดรหัส QR ทุกตัวในพื้นที่�
 ## การตั้งค่า
 
 <p align="center">
-  <img src="docs/images/settings.png" width="600" alt="หน้าต่างตั้งค่าของ Snaplens ในโหมดมืด หน้าตาแบบ System Settings แสดงคีย์ลัด Control-Option-S โหมดการอ่านเป็นอัตโนมัติ และสวิตช์เปิดเมื่อเข้าสู่ระบบ">
+  <img src="docs/images/settings.png" width="600" alt="หน้าต่างตั้งค่าของ Snaplens ในโหมดมืดบนวอลเปเปอร์ Sonoma ของ macOS หน้าตาแบบ System Settings แสดงคีย์ลัด Control-Option-S โหมดการอ่านเป็นอัตโนมัติ และสวิตช์เปิดเมื่อเข้าสู่ระบบ">
 </p>
 
 เมนูบนแถบเมนูมี **แคปหน้าจอ** · **ภาษาที่อ่าน** · **ตั้งค่า…** (⌘,) · **ออกจาก Snaplens** (⌘Q) ถ้าเปิด Snaplens ซ้ำขณะที่ทำงานอยู่ จะเปิดหน้าตั้งค่าขึ้นมา แถบด้านข้างแสดงเวอร์ชัน คีย์ลัดที่ใช้อยู่ และสถานะว่าโมเดล OCR พร้อมหรือยัง
@@ -235,7 +239,9 @@ Snaplens ถอดรหัส QR ทุกตัวในพื้นที่�
 | **ทั่วไป** | **เปิดเมื่อเข้าสู่ระบบ** |
 
 - **เปลี่ยนคีย์ลัด** คลิก **เปลี่ยน…** กดปุ่มผสมที่ต้องการ แล้วปล่อยทุกปุ่มเพื่อบันทึก กด Esc เพื่อยกเลิก คีย์ลัดต้องมี ⌃ หรือ ⌘ คู่กับปุ่มอื่น หรือเป็นปุ่ม F จะกดเดี่ยวๆ หรือคู่กับปุ่มปรับแต่งอื่นก็ได้ ห้ามใช้ ⌘ เป็นปุ่มปรับแต่งตัวเดียวเพราะชนกับเมนูของแอป และห้ามใช้ Tab กับ ⌘/⌃-Space ถ้าระบบหรือแอปอื่นใช้ปุ่มผสมนั้นอยู่แล้ว Snaplens จะกลับไปใช้ ⌃⌥S โดยไม่แจ้ง
-- **เปิดเมื่อเข้าสู่ระบบ** สร้าง LaunchAgent ของผู้ใช้ที่เปิดแอปด้วย `--startup` (ตอนนั้นจะไม่มีแจ้งเตือน พร้อมแล้ว) ถ้าย้ายตำแหน่งแอป ให้ปิดสวิตช์แล้วเปิดใหม่
+- **เปิดเมื่อเข้าสู่ระบบ** ลงทะเบียนรายการเปิดเมื่อเข้าสู่ระบบที่ฝังมาในแอปกับ macOS จึงเห็นชื่อ **Snaplens** ใน **System Settings > General > Login Items & Extensions** และปิดจากตรงนั้นก็ได้ ตอนเข้าสู่ระบบจะเปิดแอปด้วย `--startup` (ตอนนั้นจะไม่มีแจ้งเตือน พร้อมแล้ว) ถ้า macOS ไม่รับรายการนี้ Snaplens จะใช้รายการ Open at Login แบบธรรมดาแทน ซึ่งเปิดแอปเหมือนเปิดเอง จึงมีแจ้งเตือน พร้อมแล้ว ด้วย
+- **เมื่อ macOS รอให้อนุญาต** หรือ Snaplens ถูกปิดไว้ใน System Settings สวิตช์จะยังเปิดอยู่ แต่ข้อความใต้สวิตช์จะเป็นสีแดงว่า *อนุญาต Snaplens ใน การตั้งค่าระบบ > ทั่วไป > รายการเข้าสู่ระบบ* ถ้าเปิดสวิตช์แล้วยังต้องรออนุญาต Snaplens จะเปิดหน้านั้นให้
+- **เมื่อรันจากซอร์สโค้ด** สวิตช์นี้จะเป็นสีเทาพร้อมข้อความ *ใช้ได้เมื่อเปิดจากแอปที่ติดตั้ง*
 - **แอปจำแค่คีย์ลัด** ข้ามการเปิดแต่ละครั้ง โหมดการอ่านจะกลับเป็นอัตโนมัติ ภาษาปลายทางกลับเป็นไทย และขนาดของเครื่องมือกลับเป็นค่าเริ่มต้น (ส่วนสีหมึกกลับเป็นค่าเริ่มต้นทุกครั้งที่แคปอยู่แล้ว)
 - **ปิดหน้าต่างตั้งค่า** เป็นแค่การซ่อนหน้าต่าง ครั้งแรกที่ปิดหลังเปิดแอปแต่ละครั้ง Snaplens จะแจ้งว่ายังทำงานอยู่บนแถบเมนู
 
@@ -263,13 +269,13 @@ Snaplens ถอดรหัส QR ทุกตัวในพื้นที่�
 
 ### ข้อมูลที่เก็บในเครื่อง
 
-`smartshot` คือชื่อภายในของแอป path เหล่านี้จึงใช้ชื่อนี้
-
 | ข้อมูล | ตำแหน่ง |
 |---|---|
-| ค่าที่ตั้งไว้ (เฉพาะคีย์ลัด) | `~/Library/Preferences/com.smartshot.smartshot.plist` |
-| รายการเปิดเมื่อเข้าสู่ระบบ (ถ้าเปิดไว้) | `~/Library/LaunchAgents/smartshot.plist` |
+| ค่าที่ตั้งไว้ (คีย์ลัด และบิลด์ที่ลงทะเบียนรายการเปิดเมื่อเข้าสู่ระบบไว้) | `~/Library/Preferences/io.github.kehsb.snaplens.plist` |
+| รายการเปิดเมื่อเข้าสู่ระบบ (ถ้าเปิดไว้) | ลงทะเบียนไว้กับ macOS และแสดงเป็น Snaplens ใน **System Settings > General > Login Items & Extensions** ส่วนไฟล์ launchd agent อยู่ในตัวแอปที่ `Snaplens.app/Contents/Library/LaunchAgents/io.github.kehsb.snaplens.plist` |
 | ภาพ | เฉพาะที่ที่คุณเลือกบันทึก |
+
+**อัปเดตจากเวอร์ชันที่ใช้ชื่อภายในว่า `smartshot`** (รุ่นที่เผยแพร่จนถึง 0.17.0) ครั้งแรกที่เปิดเวอร์ชันใหม่ แอปจะคัดลอกคีย์ลัดออกจาก `~/Library/Preferences/com.smartshot.smartshot.plist` และเมื่อไม่มีแอปเดิมติดตั้งอยู่ใน `/Applications` หรือ `~/Applications` แล้วจึงลบไฟล์นั้น เมื่อติดตั้งทับแอปเดิมในที่เดียวกันแล้ว (เช่น `/Applications`) จะแทนที่รายการเปิดเมื่อเข้าสู่ระบบเดิม `~/Library/LaunchAgents/smartshot.plist` ด้วยรายการใหม่ให้เอง ส่วน `~/Library/Application Support/smartshot` ที่ 0.16.0 หรือเก่ากว่าทิ้งไว้ต้องลบเอง (ดูหัวข้อ [ถอนการติดตั้ง](#ถอนการติดตั้ง))
 
 ## คำถามที่พบบ่อยและการแก้ปัญหา
 
@@ -299,7 +305,7 @@ OCR สร้างมาสำหรับภาษาจีน อังกฤ
 ปุ่มนี้จะขึ้นเฉพาะเมื่อพื้นที่ที่เลือกมี QR ตัวเดียวและเป็นลิงก์เว็บที่ขึ้นต้นด้วย `http://` หรือ `https://` ถ้ามีหลาย QR ให้เลือกเฉพาะตัวที่ต้องการ หรือใช้ปุ่ม **คัดลอก**
 
 **เปิดเมื่อเข้าสู่ระบบใช้ไม่ได้แล้ว**
-รายการนี้ชี้ไปที่ตำแหน่งของแอป ถ้าย้ายแอปไปที่อื่น ให้ปิด **เปิดเมื่อเข้าสู่ระบบ** แล้วเปิดใหม่
+ดูข้อความใต้สวิตช์ **เปิดเมื่อเข้าสู่ระบบ** ในหน้าตั้งค่า ถ้าเป็นสีแดง แปลว่า Snaplens ถูกปิดไว้หรือยังไม่ได้รับอนุญาตใน **System Settings > General > Login Items & Extensions** ให้เปิดที่นั่น ถ้าย้ายแอปไปที่อื่น ให้ปิด **เปิดเมื่อเข้าสู่ระบบ** แล้วเปิดใหม่
 
 **ใช้กับ Mac ชิป Intel หรือ macOS 15 ได้ไหม**
 ไม่ได้ รีลีสนี้รองรับเฉพาะ Apple Silicon และ macOS 26
@@ -324,16 +330,16 @@ OCR สร้างมาสำหรับภาษาจีน อังกฤ
 
 ## ถอนการติดตั้ง
 
-1. ปิด **เปิดเมื่อเข้าสู่ระบบ** ในหน้าตั้งค่า แล้วออกจาก Snaplens (**ออกจาก Snaplens**, ⌘Q)
+1. ปิด **เปิดเมื่อเข้าสู่ระบบ** ในหน้าตั้งค่าก่อนลบแอป (ถ้าลบแอปไปแล้ว ให้ปิด Snaplens ใน **System Settings > General > Login Items & Extensions** แทน) แล้วออกจาก Snaplens (**ออกจาก Snaplens**, ⌘Q)
 2. ลบแอปและค่าที่ตั้งไว้ แล้วรีเซ็ตสิทธิ์ Screen Recording:
 
 ```bash
 rm -rf /Applications/Snaplens.app
-rm -f ~/Library/Preferences/com.smartshot.smartshot.plist ~/Library/LaunchAgents/smartshot.plist
+rm -f ~/Library/Preferences/io.github.kehsb.snaplens.plist
 tccutil reset ScreenCapture io.github.kehsb.snaplens
 ```
 
-ถ้าเคยใช้ Snaplens 0.16.0 หรือเก่ากว่า ให้ลบ `~/Library/Application Support/smartshot` ด้วย (ถ้ายังมีอยู่) เพราะเวอร์ชันเหล่านั้นเก็บคีย์สำหรับตรวจสลิปไว้ในโฟลเดอร์นี้
+เวอร์ชันเก่าอาจทิ้งไฟล์ของตัวเองไว้ ถ้ายังมี `~/Library/Preferences/com.smartshot.smartshot.plist` หรือ `~/Library/LaunchAgents/smartshot.plist` อยู่ (จากเวอร์ชันที่ใช้ชื่อภายในว่า `smartshot`) ให้ลบด้วย ถ้าเคยใช้ 0.16.0 หรือเก่ากว่า ให้ลบ `~/Library/Application Support/smartshot` ด้วย (ถ้ายังมีอยู่) เพราะเวอร์ชันเหล่านั้นเก็บคีย์สำหรับตรวจสลิปไว้ในโฟลเดอร์นี้
 
 ## บิลด์จากซอร์สโค้ด
 
@@ -350,7 +356,9 @@ python3.13 -m venv .venv
 - เปิดครั้งแรกจะดาวน์โหลดโมเดล OCR (ประมาณ 56 MB) จาก ModelScope มาไว้ใน virtual environment
 - เมื่อรันจากซอร์สโค้ด **สิทธิ์ Screen Recording จะเป็นของเทอร์มินัลหรือ IDE** ที่รัน Python ไม่ใช่ของ Snaplens
 - การแจ้งเตือนจะแสดงเป็นแผงในแอปแทน Notification Center
-- `./dev.sh` รีสตาร์ตแอปให้ทุกครั้งที่ `app.py` หรือไฟล์ใดๆ ใน `smartshot/` เปลี่ยน
+- `./dev.sh` รีสตาร์ตแอปให้ทุกครั้งที่ `app.py` หรือไฟล์ใดๆ ใน `snaplens/` เปลี่ยน
+- **เปิดเมื่อเข้าสู่ระบบ** ใช้ได้เฉพาะแอปที่บิลด์แล้ว เมื่อรันจากซอร์สโค้ดสวิตช์นี้จะเป็นสีเทา ถ้าเคยเปิดสวิตช์นี้ไว้ตอนรันเวอร์ชันที่ใช้ชื่อภายในว่า `smartshot` (จนถึง 0.17.0) จากซอร์สโค้ด ให้ลบ `~/Library/LaunchAgents/smartshot.plist` เอง เพราะไม่มีอะไรลบให้ และไฟล์นี้จะยังเปิด `app.py` ทุกครั้งที่เข้าสู่ระบบ
+- ถ้ามีตัว `smartshot` รุ่นเก่าเปิดอยู่ `python app.py` จะส่งต่อให้ตัวนั้นแทนการเปิดตัวที่สอง
 
 ### บิลด์แอปและ DMG
 
@@ -363,23 +371,23 @@ python3.13 -m venv .venv
 
 สคริปต์ทำงานตามลำดับนี้
 
-1. อ่าน `VERSION` จาก `smartshot/config.py`
+1. อ่าน `VERSION` จาก `snaplens/config.py`
 2. สร้างใบรับรองสำหรับเซ็นถ้ายังไม่มี (openssl, RSA-2048, อายุ 3650 วัน) การเซ็นด้วยตัวตนเดิมทุกครั้งทำให้สิทธิ์ Screen Recording ยังอยู่หลังบิลด์ใหม่
 3. ดาวน์โหลดโมเดล OCR เพื่อรวมไว้ในแอป
-4. บิลด์ `dist/Snaplens.app` ด้วย PyInstaller จาก `smartshot.spec` เป็นแอปแบบ one-folder (ถ้าเป็น one-file จะต้องแตกไฟล์ทั้งแอปประมาณ 365 MB รวมโมเดล ไปไว้ในโฟลเดอร์ชั่วคราวทุกครั้งที่เปิด) โดยตัดโมเดลที่ไม่ได้ใช้ inference engine อื่น QML, PDF, WebEngine และไฟล์แปลภาษาของ Qt ออก
+4. บิลด์ `dist/Snaplens.app` ด้วย PyInstaller จาก `snaplens.spec` เป็นแอปแบบ one-folder (ถ้าเป็น one-file จะต้องแตกไฟล์ทั้งแอปประมาณ 365 MB รวมโมเดล ไปไว้ในโฟลเดอร์ชั่วคราวทุกครั้งที่เปิด) โดยตัดโมเดลที่ไม่ได้ใช้ inference engine อื่น QML, PDF, WebEngine และไฟล์แปลภาษาของ Qt ออก แล้วคัดลอก launchd agent ของรายการเปิดเมื่อเข้าสู่ระบบ (`assets/launchd/io.github.kehsb.snaplens.plist`) ไปไว้ใน `Contents/Library/LaunchAgents`
 5. เซ็นด้วย `codesign --force --deep`
-6. สร้าง `installer/Snaplens-<version>.dmg` (UDZO พร้อมลิงก์ไปยัง `Applications`)
+6. สร้าง `installer/Snaplens-<version>.dmg` ด้วย dmgbuild ตามค่าใน `dmg.py` (บีบอัดแบบ UDZO ใช้ไอคอนแอปเป็นไอคอนของ volume และหน้าต่าง Finder แสดงแอป ลูกศร และลิงก์ไปยัง `Applications` บนภาพพื้นหลังใน `assets/dmg/`)
 7. ติดตั้งแอปไปที่ `/Applications/Snaplens.app` ด้วย `ditto`
 
-bundle id คือ `io.github.kehsb.snaplens` ไฟล์ executable คือ `Snaplens.app/Contents/MacOS/smartshot` และ `LSUIElement` ทำให้แอปไม่ขึ้นบน Dock
+bundle id คือ `io.github.kehsb.snaplens` ไฟล์ executable คือ `Snaplens.app/Contents/MacOS/Snaplens` และ `LSUIElement` ทำให้แอปไม่ขึ้นบน Dock ส่วน PyInstaller และ dmgbuild ล็อกเวอร์ชันไว้ใน `requirements.txt` แล้ว ขั้นตอนติดตั้งด้านบนจึงลงให้ครบ ภาพพื้นหลังของ DMG วาดด้วย `assets/dmg/background.py` ถ้าแก้ไฟล์นี้ ให้รัน `.venv/bin/python assets/dmg/background.py` เพื่อสร้าง `background.png` และ `background@2x.png` ใหม่
 
 ### โครงสร้างโปรเจกต์
 
 ```text
 snaplens-mac/
 ├── app.py                  # Entry point: single instance, no Dock icon, Edit menu, starts the app
-├── smartshot/              # The app package (internal name "smartshot")
-│   ├── config.py           # Version, default shortcut, languages, fonts, OCR thresholds
+├── snaplens/               # The app package
+│   ├── config.py           # Version, bundle id, default shortcut, languages, fonts, OCR thresholds
 │   ├── task.py             # Task: runs a function off the UI thread (QThread)
 │   ├── ocr/
 │   │   ├── engine.py       # RapidOCR: shared PP-OCRv6 detector, PP-OCRv5 Chinese/Thai recognizers
@@ -390,7 +398,8 @@ snaplens-mac/
 │   ├── system/
 │   │   ├── mac.py          # AppKit/Quartz/Carbon: display capture, overlay level, permission, shortcut
 │   │   ├── hotkey.py       # Shortcut names and symbols, and which combinations are allowed
-│   │   └── autostart.py    # Login item via a LaunchAgent plist
+│   │   ├── autostart.py    # Login item: the app's launchd agent, registered with SMAppService
+│   │   └── prefs.py        # Settings store (QSettings), and moving settings over from older versions
 │   └── ui/
 │       ├── main.py         # App controller: menu bar, shortcut, settings state, capture lifecycle
 │       ├── menubar.py      # Status item and its native menu
@@ -403,9 +412,12 @@ snaplens-mac/
 │       ├── notify.py       # Notification Center notices, or the in-app panel
 │       └── assets.py       # Fonts, the QR badge's glyph, app icon
 ├── assets/icons/           # App and menu bar icons
+├── assets/dmg/             # DMG window background, and background.py, which draws it
+├── assets/launchd/         # The login item's launchd agent, copied into the app
 ├── docs/images/            # README screenshots
 ├── testset/                # Sample image
-├── smartshot.spec          # PyInstaller recipe and bundle metadata
+├── snaplens.spec           # PyInstaller recipe and bundle metadata
+├── dmg.py                  # dmgbuild settings: DMG window, icon positions, background
 ├── build.sh                # Build, sign, DMG, install
 ├── dev.sh                  # Auto-restart dev runner
 └── requirements.txt        # Pinned dependencies
@@ -415,7 +427,7 @@ snaplens-mac/
 
 - **Qt (PySide6)** วาดผืนภาพตอนแคป (ภาพหน้าจอที่หยุดนิ่ง พื้นที่ที่เลือก คำแปล และสิ่งที่วาด) และมี worker thread, การเก็บค่าตั้งค่า (QSettings) และ socket ที่ทำให้เปิดแอปได้ทีละตัว
 - **AppKit ผ่าน PyObjC** วาดทุกอย่างที่อยู่รอบๆ ได้แก่ เมนูบนแถบเมนู แถบเครื่องมือ แถบคำแนะนำ ป๊อปโอเวอร์และเมนูตอนแคป การ์ด QR หน้าต่างตั้งค่า และการแจ้งเตือนใน Notification Center โดย Liquid Glass (`NSGlassEffectView`) ต้องใช้ macOS 26 ส่วน fallback เป็น `NSVisualEffectView` สำหรับระบบที่เก่ากว่ายังไม่ได้ทดสอบ
-- **Quartz** แคปแต่ละจอที่ความละเอียดเต็ม และ **Carbon** ทำหน้าที่คีย์ลัดระดับระบบ
+- **Quartz** แคปแต่ละจอที่ความละเอียดเต็ม **Carbon** ทำหน้าที่คีย์ลัดระดับระบบ และ **ServiceManagement** (`SMAppService`) ลงทะเบียนรายการเปิดเมื่อเข้าสู่ระบบ
 - **OCR:** โมเดลตรวจจับ PP-OCRv6 small หาบรรทัดครั้งเดียว แล้วอ่านแต่ละบรรทัดด้วยโมเดล PP-OCRv5 mobile ภาษาจีนและ/หรือภาษาไทย ภาพแคปที่ด้านใดด้านหนึ่งสั้นกว่า 400 px จะถูกขยาย 2× และผลอ่านที่ได้คะแนนต่ำกว่า 0.5 จะถูกตัดทิ้ง
 
 ## ร่วมพัฒนา
@@ -424,7 +436,7 @@ snaplens-mac/
 
 - **รายงานบั๊ก:** ระบุเวอร์ชัน macOS และรุ่นของ Mac ใช้ DMG หรือรันจากซอร์สโค้ด และขั้นตอนที่ทำให้เกิดปัญหา ลบข้อมูลส่วนตัวออกจากภาพหน้าจอก่อน เช่น ชื่อ เลขบัญชี และ QR ชำระเงิน
 - **Pull request:** หนึ่ง PR ต่อหนึ่งเรื่อง ตอนนี้ยังไม่มีชุดทดสอบหรือ CI จึงขอให้อธิบายว่าทดสอบด้วยมืออย่างไร รวมถึงเวอร์ชัน macOS ที่ใช้ ถ้าเป็นการเปลี่ยนแปลงใหญ่ เช่น รองรับหลายภาษาหรือเพิ่มโหมดแคปใหม่ ให้เปิด issue คุยกันก่อน
-- **โค้ด:** วางโค้ดไว้ในแพ็กเกจตามโดเมนใต้ `smartshot/` (`ocr`, `qr`, `system`, `ui`) สร้าง UI แบบเนทีฟด้วย AppKit ผ่าน PyObjC โดยใช้ส่วนประกอบที่มีอยู่ใน `smartshot/ui/native.py` ส่วน Qt ใช้วาดผืนภาพตอนแคป งานที่ใช้เวลานานให้ย้ายออกจาก UI thread ด้วย `smartshot.task.Task` ข้อความที่ผู้ใช้เห็นเป็นภาษาไทย จึงควรใช้ถ้อยคำให้เข้ากับของเดิม `pyflakes` อยู่ใน `requirements.txt` แล้ว ให้รัน `.venv/bin/pyflakes app.py smartshot` ก่อน push
+- **โค้ด:** วางโค้ดไว้ในแพ็กเกจตามโดเมนใต้ `snaplens/` (`ocr`, `qr`, `system`, `ui`) สร้าง UI แบบเนทีฟด้วย AppKit ผ่าน PyObjC โดยใช้ส่วนประกอบที่มีอยู่ใน `snaplens/ui/native.py` ส่วน Qt ใช้วาดผืนภาพตอนแคป งานที่ใช้เวลานานให้ย้ายออกจาก UI thread ด้วย `snaplens.task.Task` ข้อความที่ผู้ใช้เห็นเป็นภาษาไทย จึงควรใช้ถ้อยคำให้เข้ากับของเดิม `pyflakes` อยู่ใน `requirements.txt` แล้ว ให้รัน `.venv/bin/pyflakes app.py snaplens` ก่อน push
 - **ห้าม commit** API key หรือภาพสลิปจริง ไฟล์ `thunder.key` และโฟลเดอร์ `testset/slips/` ที่แบรนช์ `ThunderAPI` ใช้เก็บคีย์และภาพสลิป ยังอยู่ใน .gitignore ของ main ด้วย จึงไม่ถูก commit ติดมาหลังสลับแบรนช์
 
 ## ขอขอบคุณ
@@ -442,6 +454,7 @@ Snaplens สร้างขึ้นบนโปรเจกต์โอเพ�
 | [deep-translator](https://github.com/nidhaloff/deep-translator) | MIT | ไคลเอนต์ Google Translate และ MyMemory |
 | [NumPy](https://numpy.org) | BSD-3-Clause และอื่นๆ | อาร์เรย์ |
 | [PyInstaller](https://pyinstaller.org) | GPL-2.0-or-later พร้อมข้อยกเว้นสำหรับ bootloader | บิลด์ app bundle |
+| [dmgbuild](https://github.com/dmgbuild/dmgbuild) (พร้อม ds_store และ mac_alias) | MIT | บิลด์ไฟล์ DMG |
 | [Python](https://www.python.org) | PSF License | runtime ที่รวมมากับแอป |
 
 ไลบรารีที่ติดมากับ dependency ด้วย ซึ่งแต่ละตัวใช้สัญญาอนุญาตของตัวเอง ได้แก่ shapely (BSD-3-Clause) พร้อม GEOS (LGPL-2.1), pyclipper, omegaconf, antlr4-python3-runtime, PyYAML, Pillow, requests, urllib3, idna, charset-normalizer, certifi (MPL-2.0), beautifulsoup4, soupsieve, tqdm (MPL-2.0 และ MIT), colorlog, colorama, packaging, typing_extensions และ setuptools
